@@ -60,7 +60,9 @@ public sealed class TectonicCompiler
             var spec = new ProcessSpec(
                 SafePaths.ResolveExistingFile(resourceRoot, resources.Compiler), workspace,
                 ["--untrusted", "--only-cached", "--bundle",
-                    SafePaths.ResolveExistingFile(resourceRoot, resources.SupportBundle),
+                    // Tectonic parses URLs before paths; "D:\..." is otherwise
+                    // treated as an unsupported URL scheme named "d".
+                    new Uri(SafePaths.ResolveExistingFile(resourceRoot, resources.SupportBundle)).AbsoluteUri,
                     "--keep-logs", "--synctex", "--outdir", workspace, tex]);
             var result = await process.RunAsync(spec, token).ConfigureAwait(false);
             token.ThrowIfCancellationRequested();

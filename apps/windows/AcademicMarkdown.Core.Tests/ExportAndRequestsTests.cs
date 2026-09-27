@@ -79,6 +79,9 @@ public sealed class ExportAndRequestsTests : IDisposable
             Assert.Contains("--untrusted", spec.Arguments);
             Assert.Contains("--only-cached", spec.Arguments);
             Assert.DoesNotContain("--shell-escape", spec.Arguments);
+            var bundleArgument = spec.Arguments[spec.Arguments.ToList().IndexOf("--bundle") + 1];
+            Assert.StartsWith("file:///", bundleArgument);
+            Assert.Equal(Path.Combine(resources, "TeX", "support.ttb"), new Uri(bundleArgument).LocalPath);
             Assert.Equal("source latex", await File.ReadAllTextAsync(Path.Combine(workspace, "report.tex")));
             Assert.Equal("image", await File.ReadAllTextAsync(Path.Combine(workspace, "Hình", "sơ đồ.png")));
             await File.WriteAllBytesAsync(Path.Combine(workspace, "report.pdf"), Encoding.ASCII.GetBytes("%PDF-1.7\nfixture"));
