@@ -1,5 +1,7 @@
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Markup;
+using Microsoft.UI.Xaml.XamlTypeInfo;
 
 namespace AcademicMarkdown.Windows;
 
@@ -30,11 +32,22 @@ internal static class Program
     }
 }
 
-internal sealed class AcademicMarkdownApplication : Application
+internal sealed class AcademicMarkdownApplication : Application, IXamlMetadataProvider
 {
     // Retain the window for the lifetime of the application. Code-only WinUI avoids
     // XAML code generation; it does not make Windows runtime testing unnecessary.
     private MainWindow? window;
+    private XamlControlsXamlMetaDataProvider? metadataProvider;
+
+    // Code-only applications must provide the metadata wiring normally generated
+    // from App.xaml. Lazy initialization also supports queries during resource loading.
+    private XamlControlsXamlMetaDataProvider MetadataProvider => metadataProvider ??= new();
+
+    public IXamlType GetXamlType(Type type) => MetadataProvider.GetXamlType(type);
+
+    public IXamlType GetXamlType(string fullName) => MetadataProvider.GetXamlType(fullName);
+
+    public XmlnsDefinition[] GetXmlnsDefinitions() => MetadataProvider.GetXmlnsDefinitions();
 
     public AcademicMarkdownApplication()
     {
