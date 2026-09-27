@@ -12,9 +12,6 @@
     <WindowsPackageType>None</WindowsPackageType>
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>false</EnableMsixTooling>
-    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
-    <EnableDefaultPageItems>false</EnableDefaultPageItems>
-    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <PublishSingleFile>false</PublishSingleFile>
     <PublishTrimmed>false</PublishTrimmed>
     <PublishReadyToRun>false</PublishReadyToRun>
