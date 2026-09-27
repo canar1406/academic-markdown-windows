@@ -49,6 +49,15 @@ jobs:
         id: build
         run: ./scripts/windows/Build-Windows.ps1
 
+      - name: Verify native window and local editor startup
+        shell: powershell
+        env:
+          BUILD_ARTIFACT_DIRECTORY: ${{ steps.build.outputs.artifact_directory }}
+        run: |
+          $app = Join-Path $env:BUILD_ARTIFACT_DIRECTORY 'AcademicMarkdown-windows-x64-experimental/AcademicMarkdown.Windows.exe'
+          $report = Join-Path $env:BUILD_ARTIFACT_DIRECTORY 'startup-smoke.json'
+          ./scripts/windows/Test-Startup.ps1 -Executable $app -ReportPath $report
+
       # No always() upload: a failed/absent native PDF smoke must not produce an
       # apparently successful downloadable application artifact.
       - name: Upload unsigned private engineering artifact
@@ -60,6 +69,7 @@ jobs:
             ${{ steps.build.outputs.artifact_directory }}/*.zip
             ${{ steps.build.outputs.artifact_directory }}/*.zip.sha256
             ${{ steps.build.outputs.artifact_directory }}/README.md
+            ${{ steps.build.outputs.artifact_directory }}/startup-smoke.json
             ${{ steps.build.outputs.artifact_directory }}/test-results/*.trx
           if-no-files-found: error
           retention-days: 7
