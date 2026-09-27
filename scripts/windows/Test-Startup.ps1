@@ -14,7 +14,16 @@ if ([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT) {
 Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes
 $executablePath = (Resolve-Path -LiteralPath $Executable).Path
-$process = Start-Process -FilePath $executablePath -WorkingDirectory (Split-Path $executablePath) -PassThru
+[void][IO.Directory]::CreateDirectory((Split-Path -Parent $ReportPath))
+$diagnosticPath = [IO.Path]::ChangeExtension($ReportPath, '.diagnostics.jsonl')
+$previousDiagnostics = [Environment]::GetEnvironmentVariable('ACADEMIC_WINDOWS_DIAGNOSTICS', 'Process')
+try {
+    $env:ACADEMIC_WINDOWS_DIAGNOSTICS = $diagnosticPath
+    $process = Start-Process -FilePath $executablePath -WorkingDirectory (Split-Path $executablePath) -PassThru
+}
+finally {
+    [Environment]::SetEnvironmentVariable('ACADEMIC_WINDOWS_DIAGNOSTICS', $previousDiagnostics, 'Process')
+}
 $report = [ordered]@{
     status = 'failed'
     checked = 'Native WinUI startup and bundled editor.ready plus Markdown load acknowledgement'
@@ -59,6 +68,17 @@ try {
 }
 catch {
     $report.error = $_.Exception.Message
+    if (Test-Path -LiteralPath $diagnosticPath) {
+        Write-Host 'Application startup diagnostics:'
+        Get-Content -LiteralPath $diagnosticPath | Write-Host
+    }
+    try {
+        Get-WinEvent -FilterHashtable @{
+            LogName = 'Application'; StartTime = [DateTime]::Now.AddMinutes(-3)
+        } -MaxEvents 30 | Where-Object { $_.Message -like '*AcademicMarkdown*' } |
+            ForEach-Object { Write-Host ($_.Message.Substring(0, [Math]::Min(4000, $_.Message.Length))) }
+    }
+    catch { Write-Host 'Windows event log was unavailable for diagnostics.' }
     throw
 }
 finally {

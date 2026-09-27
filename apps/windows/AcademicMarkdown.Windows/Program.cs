@@ -8,13 +8,25 @@ internal static class Program
     [STAThread]
     private static void Main()
     {
-        WinRT.ComWrappersSupport.InitializeComWrappers();
-        Application.Start(initialization =>
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+            RuntimeDiagnostics.Record("dotnet-unhandled", args.ExceptionObject as Exception);
+        RuntimeDiagnostics.Record("program-entry");
+        try
         {
-            SynchronizationContext.SetSynchronizationContext(
-                new DispatcherQueueSynchronizationContext(DispatcherQueue.GetForCurrentThread()));
-            _ = new AcademicMarkdownApplication();
-        });
+            WinRT.ComWrappersSupport.InitializeComWrappers();
+            Application.Start(initialization =>
+            {
+                RuntimeDiagnostics.Record("application-start");
+                SynchronizationContext.SetSynchronizationContext(
+                    new DispatcherQueueSynchronizationContext(DispatcherQueue.GetForCurrentThread()));
+                _ = new AcademicMarkdownApplication();
+            });
+        }
+        catch (Exception error)
+        {
+            RuntimeDiagnostics.Record("program-failed", error);
+            throw;
+        }
     }
 }
 
@@ -26,12 +38,24 @@ internal sealed class AcademicMarkdownApplication : Application
 
     public AcademicMarkdownApplication()
     {
+        UnhandledException += (_, args) => RuntimeDiagnostics.Record("xaml-unhandled", args.Exception);
+        RuntimeDiagnostics.Record("application-resources");
         Resources.MergedDictionaries.Add(new Microsoft.UI.Xaml.Controls.XamlControlsResources());
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        window = new MainWindow();
-        window.Activate();
+        try
+        {
+            RuntimeDiagnostics.Record("window-creating");
+            window = new MainWindow();
+            RuntimeDiagnostics.Record("window-activating");
+            window.Activate();
+        }
+        catch (Exception error)
+        {
+            RuntimeDiagnostics.Record("window-failed", error);
+            throw;
+        }
     }
 }
