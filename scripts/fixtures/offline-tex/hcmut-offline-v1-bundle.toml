@@ -1,0 +1,9 @@
+[bundle]
+name = "hcmut-offline-v1"
+expected_hash = "10933ca68a32ea43cdbda7815dee0bb84d7b15a270c7760954364d3dae5d2dbf"
+search_order = ["/cache//"]
+
+# The repack script stages the selected cache resources directly in the build
+# directory and invokes only Tectonic's deterministic TTBv1 pack job.
+[inputs.cache]
+source.dir.path = "unused"

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: app-document: https://document.academic-markdown.invalid; font-src 'self' data:; connect-src 'none';" />
+    <title>Markdown Report Editor</title>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="editor-bar">
+        <div class="brand-lockup" aria-label="Markdown Report Editor">
+          <span class="brand-mark">M</span>
+          <span>Academic Markdown</span>
+        </div>
+        <div class="mode-switch" role="group" aria-label="Editor mode">
+          <button id="mode-visual" type="button">Visual</button>
+          <button id="mode-source" type="button">Source</button>
+        </div>
+      </header>
+      <section id="diagnostics" class="diagnostics" role="alert" hidden></section>
+      <main class="workspace">
+        <div class="editor-stage">
+          <div class="editor-zoom-space">
+            <div class="editor-zoom-canvas">
+              <section id="editor" aria-label="Visual Markdown editor"></section>
+              <section id="source-editor" aria-label="Markdown source editor" hidden></section>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

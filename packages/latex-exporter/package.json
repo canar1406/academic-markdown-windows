@@ -1,0 +1,26 @@
+{
+  "name": "@markdown/latex-exporter",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "test": "vitest run",
+    "test:pdf-golden": "HCMUT_PDF_GOLDEN=1 vitest run test/pdf-golden.integration.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@markdown/document-core": "workspace:*",
+    "@markdown/theme-engine": "workspace:*",
+    "mdast-util-from-markdown": "^2.0.2",
+    "mdast-util-gfm": "^3.1.0",
+    "mdast-util-math": "^3.0.0",
+    "micromark-extension-gfm": "^3.0.0",
+    "micromark-extension-math": "^3.1.0"
+  },
+  "devDependencies": {
+    "@markdown/theme-hcmut-report-v1": "workspace:*",
+    "@types/mdast": "^4.0.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

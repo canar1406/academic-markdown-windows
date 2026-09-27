@@ -1,0 +1,98 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`nested authored cover contract > uses stable absolute widths across nested minipages and emits real padding and vertical gaps 1`] = `
+"\\begin{titlepage}
+\\noindent \\begin{minipage}[t]{160.0000mm}
+\\vspace{0pt}
+\\rmfamily\\mdseries\\upshape\\fontsize{12}{16.200000000000003}\\selectfont\\color[HTML]{111111}\\raggedright
+\\setlength{\\parindent}{0pt}\\setlength{\\parskip}{0pt}
+\\vspace*{4.0000mm}
+\\noindent\\hspace*{4.0000mm}%
+\\begin{minipage}[t]{152.0000mm}
+\\vspace{0pt}
+\\noindent \\begin{minipage}[t]{152.0000mm}
+\\vspace{0pt}
+\\rmfamily\\mdseries\\upshape\\fontsize{12}{16.200000000000003}\\selectfont\\color[HTML]{111111}\\raggedright
+\\setlength{\\parindent}{0pt}\\setlength{\\parskip}{0pt}
+\\noindent \\begin{minipage}[t]{72.0000mm}
+\\vspace{0pt}
+\\rmfamily\\bfseries\\upshape\\fontsize{12}{16.200000000000003}\\selectfont\\color[HTML]{204060}\\raggedright
+\\setlength{\\parindent}{0pt}\\setlength{\\parskip}{0pt}
+\\vspace*{2.0000mm}
+\\noindent\\hspace*{2.0000mm}%
+\\begin{minipage}[t]{68.0000mm}
+\\vspace{0pt}
+\\noindent \\begin{minipage}[t]{68.0000mm}
+\\vspace{0pt}
+\\rmfamily\\bfseries\\upshape\\fontsize{12}{16.200000000000003}\\selectfont\\color[HTML]{204060}\\raggedright
+\\setlength{\\parindent}{0pt}\\setlength{\\parskip}{0pt}
+\\noindent \\strut Left \\& safe — Trái\\par
+\\end{minipage}\\par
+\\vspace{3.0000mm}
+\\nointerlineskip
+\\noindent \\begin{minipage}[t]{68.0000mm}
+\\vspace{0pt}
+\\rmfamily\\mdseries\\itshape\\fontsize{12}{16.200000000000003}\\selectfont\\color[HTML]{204060}\\raggedright
+\\setlength{\\parindent}{0pt}\\setlength{\\parskip}{0pt}
+\\noindent \\strut Chi tiết thứ hai\\par
+\\end{minipage}\\par
+\\end{minipage}\\par
+\\vspace*{2.0000mm}
+\\end{minipage}%
+\\hspace{8.0000mm}%
+\\begin{minipage}[t]{72.0000mm}
+\\vspace{0pt}
+\\rmfamily\\mdseries\\upshape\\fontsize{12}{16.200000000000003}\\selectfont\\color[HTML]{111111}\\raggedright
+\\setlength{\\parindent}{0pt}\\setlength{\\parskip}{0pt}
+\\noindent \\begin{minipage}[t]{72.0000mm}
+\\vspace{0pt}
+\\rmfamily\\mdseries\\upshape\\fontsize{12}{16.200000000000003}\\selectfont\\color[HTML]{111111}\\raggedright
+\\setlength{\\parindent}{0pt}\\setlength{\\parskip}{0pt}
+\\noindent \\strut Right \\% safe — Phải\\par
+\\end{minipage}\\par
+\\vspace{4.0000mm}
+\\nointerlineskip
+\\noindent \\begin{minipage}[t]{72.0000mm}
+\\vspace{0pt}
+\\rmfamily\\mdseries\\upshape\\fontsize{10}{13.5}\\selectfont\\color[HTML]{111111}\\raggedright
+\\setlength{\\parindent}{0pt}\\setlength{\\parskip}{0pt}
+\\noindent \\begin{minipage}[t]{34.0000mm}
+\\vspace{0pt}
+\\rmfamily\\mdseries\\upshape\\fontsize{10}{13.5}\\selectfont\\color[HTML]{111111}\\raggedright
+\\setlength{\\parindent}{0pt}\\setlength{\\parskip}{0pt}
+\\noindent \\begin{minipage}[t]{34.0000mm}
+\\vspace{0pt}
+\\rmfamily\\mdseries\\upshape\\fontsize{10}{13.5}\\selectfont\\color[HTML]{111111}\\raggedright
+\\setlength{\\parindent}{0pt}\\setlength{\\parskip}{0pt}
+\\noindent \\strut Inner one\\par
+\\end{minipage}\\par
+\\end{minipage}%
+\\hspace{4.0000mm}%
+\\begin{minipage}[t]{34.0000mm}
+\\vspace{0pt}
+\\rmfamily\\mdseries\\upshape\\fontsize{10}{13.5}\\selectfont\\color[HTML]{111111}\\raggedright
+\\setlength{\\parindent}{0pt}\\setlength{\\parskip}{0pt}
+\\noindent \\begin{minipage}[t]{34.0000mm}
+\\vspace{0pt}
+\\rmfamily\\mdseries\\upshape\\fontsize{10}{13.5}\\selectfont\\color[HTML]{111111}\\raggedright
+\\setlength{\\parindent}{0pt}\\setlength{\\parskip}{0pt}
+\\noindent \\strut Inner two\\par
+\\end{minipage}\\par
+\\end{minipage}\\par
+\\end{minipage}\\par
+\\end{minipage}\\par
+\\end{minipage}\\par
+\\vspace{6.0000mm}
+\\nointerlineskip
+\\noindent \\begin{minipage}[t]{152.0000mm}
+\\vspace{0pt}
+\\rmfamily\\mdseries\\upshape\\fontsize{12}{16.200000000000003}\\selectfont\\color[HTML]{111111}\\centering
+\\setlength{\\parindent}{0pt}\\setlength{\\parskip}{0pt}
+\\noindent \\strut Nguyễn Ánh — Kết luận\\par
+\\end{minipage}\\par
+\\end{minipage}\\par
+\\vspace*{4.0000mm}
+\\end{minipage}\\par
+\\end{titlepage}
+"
+`;

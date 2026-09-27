@@ -1,0 +1,36 @@
+.DS_Store
+node_modules/
+
+# Generated web/native builds
+apps/editor/dist/
+apps/macos/.build/
+build/
+output/
+tmp/
+
+# Local automation/session state
+.playwright-cli/
+.claude/settings.local.json
+.codex/
+
+# Generated editor resources are rebuilt by scripts/sync-editor-bundle.sh
+apps/macos/Sources/MarkdownMacOS/Resources/Web/*
+!apps/macos/Sources/MarkdownMacOS/Resources/Web/README.txt
+
+# TeX and tooling build artifacts outside the supplied archive fixtures
+*.aux
+*.log
+*.out
+*.ptc
+*.toc
+*.thm
+*.synctex.gz
+
+# Never publish machine credentials or test artifacts
+.env
+.env.*
+*.p12
+*.pfx
+*.pem
+*.key
+**/test-results/

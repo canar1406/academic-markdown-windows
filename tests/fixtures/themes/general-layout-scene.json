@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 2,
+  "page": {"size": "A4", "widthMm": 210, "heightMm": 297},
+  "tokens": {"ink": {"type": "color", "value": "#204060"}},
+  "variants": {},
+  "bindings": [],
+  "root": {
+    "id": "page", "widget": "page", "version": 1,
+    "properties": {}, "style": {"color": {"token": "ink"}, "fontSizePt": 11},
+    "children": [
+      {
+        "id": "intro", "widget": "section", "version": 1,
+        "properties": {"paddingMm": 4, "gapMm": 6}, "style": {},
+        "children": [{
+          "id": "row", "widget": "row", "version": 1,
+          "properties": {"paddingMm": 2, "gapMm": 8, "ratios": "30:70"},
+          "style": {"background": "#EAF0F8"},
+          "children": [
+            {"id": "left", "widget": "column", "version": 1, "properties": {}, "style": {}, "children": [
+              {"id": "text", "widget": "text", "version": 1, "properties": {"text": "Nguyễn Ánh & 50% — Trái"}, "style": {"fontWeight": "bold"}, "children": []}
+            ]},
+            {"id": "right", "widget": "column", "version": 1, "properties": {}, "style": {}, "children": [
+              {"id": "placeholder", "widget": "image-placeholder", "version": 1, "properties": {"alt": "Sơ đồ — chưa nhập ảnh", "heightMm": 30}, "style": {}, "children": []}
+            ]}
+          ]
+        }]
+      },
+      {
+        "id": "header", "widget": "header", "version": 1, "properties": {}, "style": {},
+        "children": [{"id": "header-section", "widget": "section", "version": 1, "properties": {}, "style": {}, "children": [
+          {"id": "header-text", "widget": "text", "version": 1, "properties": {"text": "General header"}, "style": {}, "children": []}
+        ]}]
+      },
+      {
+        "id": "footer", "widget": "footer", "version": 1, "properties": {"format": "none"}, "style": {},
+        "children": [{"id": "footer-text", "widget": "text", "version": 1, "properties": {"text": "General footer"}, "style": {}, "children": []}]
+      }
+    ]
+  }
+}

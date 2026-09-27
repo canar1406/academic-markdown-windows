@@ -1,0 +1,32 @@
+{
+  "name": "@markdown/editor",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "test:browser": "playwright test --config playwright.config.ts",
+    "test:browser:webkit": "PLAYWRIGHT_BROWSER_NAME=webkit playwright test --config playwright.config.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@codemirror/commands": "^6.11.0",
+    "@codemirror/lang-markdown": "^6.5.2",
+    "@codemirror/state": "^6.7.1",
+    "@codemirror/view": "^6.43.9",
+    "@markdown/bridge-protocol": "workspace:*",
+    "@markdown/document-core": "workspace:*",
+    "@markdown/latex-exporter": "workspace:*",
+    "@markdown/muya-core": "workspace:*",
+    "@markdown/theme-engine": "workspace:*",
+    "@markdown/theme-hcmut-report-v1": "workspace:*",
+    "html-to-image": "^1.11.13"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^22.15.21",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.2.4"
+  }
+}

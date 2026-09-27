@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "toolchain": {
+    "nodeMajor": 22,
+    "pnpm": "10.15.0",
+    "dotnetSdk": "8.0.425",
+    "windowsAppSdk": "1.8.260921001",
+    "targetFramework": "net8.0-windows10.0.19041.0",
+    "runtimeIdentifier": "win-x64",
+    "platform": "x64"
+  },
+  "provenance": {
+    "dotnetMetadata": "https://dotnetcli.blob.core.windows.net/dotnet/release-metadata/8.0/releases.json",
+    "windowsAppSdkMetadata": "https://api.nuget.org/v3-flatcontainer/microsoft.windowsappsdk/index.json",
+    "tectonicMetadata": "https://api.github.com/repos/tectonic-typesetting/tectonic/releases/tags/tectonic%400.17.0",
+    "tectonicCommit": "8c0126a9653239a2e6e0a5274af9b8510f643030",
+    "supportBundleNote": "Pinned to the current repository bytes. The inherited TECTONIC_SUPPORT_BUNDLE_NOTICES.md records an older SHA-256 (12127614ab3adae2ed63f28d5f7159ddebe45e2c681c881a2c30c6354b8b9781); it is preserved unchanged. Reconcile its content identifier and inventory against this bundle before public redistribution."
+  },
+  "tectonic": {
+    "version": "0.17.0",
+    "archive": {
+      "name": "tectonic-0.17.0-x86_64-pc-windows-msvc.zip",
+      "url": "https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.17.0/tectonic-0.17.0-x86_64-pc-windows-msvc.zip",
+      "sha256": "f61ce51f0b0ade1015b7de7ef368541c5424e9756ecbd0d7af97d6d48030845f"
+    },
+    "executable": {
+      "name": "tectonic.exe",
+      "sha256": "99ffcfdbf1ebf8bdda9e791942e3d06aedb12463fddc33f07de6f5211c8bf08d"
+    },
+    "license": {
+      "name": "LICENSE",
+      "url": "https://raw.githubusercontent.com/tectonic-typesetting/tectonic/8c0126a9653239a2e6e0a5274af9b8510f643030/LICENSE",
+      "sha256": "814a258f76e420b25cb3c07172eb2b3956f34cefbf0a650413b78e65c425f306"
+    }
+  },
+  "webSource": "apps/editor/dist",
+  "requiredWebFiles": ["index.html", "prism-yaml.js", "prism-latex.js"],
+  "pinnedFiles": [
+    {
+      "source": "apps/macos/Sources/MarkdownMacOS/Resources/TeX/hcmut-offline-v1.ttb",
+      "target": "TeX/hcmut-offline-v1.ttb",
+      "sha256": "24e1606f84ad2dfb051e1bebe1fb535a3e77252a871376ad597f56ff20a56255"
+    },
+    {
+      "source": "apps/macos/Sources/MarkdownMacOS/Resources/Theme/Images/hcmut.png",
+      "target": "Theme/Images/hcmut.png",
+      "sha256": "4a12a0b690db0826c338c5391abb7987f4cfc8df5987c387c57b0d57df3ea33f"
+    },
+    {
+      "source": "apps/macos/Sources/MarkdownMacOS/Resources/Theme/Fonts/lmmonolt10-bold.otf",
+      "target": "Theme/Fonts/lmmonolt10-bold.otf",
+      "sha256": "2f4ae1bd30d4203a1c74c61d61dddbd5e2c2d5a7001d456b1b98e08b7c47ffb9"
+    },
+    {
+      "source": "apps/macos/Sources/MarkdownMacOS/Resources/Theme/Fonts/lmmonolt10-boldoblique.otf",
+      "target": "Theme/Fonts/lmmonolt10-boldoblique.otf",
+      "sha256": "a739b6deaafe0b9e8ae1eec9db1f425c52e1f6f483ca8e07e359bdd118310bba"
+    },
+    {
+      "source": "apps/macos/Sources/MarkdownMacOS/Resources/Theme/Fonts/lmmono10-italic.otf",
+      "target": "Theme/Fonts/lmmono10-italic.otf",
+      "sha256": "14e6328a5383d2b927c47051093ce0aff60deea07e6df71b8b99ee8d9c2ff8f2"
+    }
+  ],
+  "noticeFiles": [
+    {
+      "source": "THIRD_PARTY_NOTICES.md",
+      "target": "Licenses/THIRD_PARTY_NOTICES.md"
+    },
+    {
+      "source": "packages/muya-fork/LICENSE",
+      "target": "Licenses/MUYA_LICENSE"
+    },
+    {
+      "source": "apps/macos/Sources/MarkdownMacOS/Resources/Licenses/TECTONIC_SUPPORT_BUNDLE_NOTICES.md",
+      "target": "Licenses/TECTONIC_SUPPORT_BUNDLE_NOTICES.md"
+    },
+    {
+      "source": "apps/macos/Sources/MarkdownMacOS/Resources/Licenses/TEXLIVE_LICENSE.txt",
+      "target": "Licenses/TEXLIVE_LICENSE.txt"
+    },
+    {
+      "source": "apps/macos/Sources/MarkdownMacOS/Resources/Licenses/GNU_GPL_V2.txt",
+      "target": "Licenses/GNU_GPL_V2.txt"
+    },
+    {
+      "source": "apps/macos/Sources/MarkdownMacOS/Resources/Theme/Fonts/GUST-FONT-LICENSE.txt",
+      "target": "Theme/Fonts/GUST-FONT-LICENSE.txt"
+    },
+    {
+      "source": "apps/macos/Sources/MarkdownMacOS/Resources/Theme/Fonts/MANIFEST-Latin-Modern.txt",
+      "target": "Theme/Fonts/MANIFEST-Latin-Modern.txt"
+    },
+    {
+      "source": "apps/macos/Sources/MarkdownMacOS/Resources/Theme/Fonts/README-Latin-Modern.txt",
+      "target": "Theme/Fonts/README-Latin-Modern.txt"
+    },
+    {
+      "source": "apps/macos/Sources/MarkdownMacOS/Resources/Theme/Fonts/PROVENANCE.md",
+      "target": "Theme/Fonts/PROVENANCE.md"
+    }
+  ],
+  "runtimeResources": {
+    "schemaVersion": 1,
+    "compiler": "Tools/tectonic.exe",
+    "supportBundle": "TeX/hcmut-offline-v1.ttb",
+    "assets": [
+      { "source": "Theme/Images/hcmut.png", "target": "Images/hcmut.png" },
+      { "source": "Theme/Fonts/lmmonolt10-bold.otf", "target": "lmmonolt10-bold.otf" },
+      { "source": "Theme/Fonts/lmmonolt10-boldoblique.otf", "target": "lmmonolt10-boldoblique.otf" },
+      { "source": "Theme/Fonts/lmmono10-italic.otf", "target": "lmmono10-italic.otf" }
+    ]
+  }
+}

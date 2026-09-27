@@ -1,0 +1,46 @@
+\documentclass[a4paper]{article}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setdefaultlanguage{vietnamese}
+\usepackage{mathptmx}
+\setmainfont{Times New Roman}
+\usepackage{geometry,graphicx,fancyhdr,lastpage,hyperref,caption,subcaption}
+\usepackage{booktabs,longtable,array,tabularx,multirow,diagbox}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{xcolor,listings,tikz,mdframed,algorithm2e}
+\geometry{a4paper,total={160mm,240mm},left=30mm,top=22mm,right=20mm,bottom=20mm}
+\newtheorem{theorem}{Định lý}
+\begin{document}
+\section{Kiểm tra ngoại tuyến}
+Tiếng Việt: Nguyễn Thị Ánh, Trường Đại học Bách khoa.
+Tệp nguồn: \texttt{BTL\_HK232.pdf}.
+
+\begin{theorem}
+Với mọi $a,b \in \mathbb{R}$, $(a+b)^2=a^2+2ab+b^2$.
+\end{theorem}
+
+\subsection{Công thức ở cỡ chữ tiêu đề $h=10$}
+Giá trị $P_{2000}=6$ phải biên dịch được hoàn toàn ngoại tuyến.
+
+\begin{algorithm}[H]
+\KwIn{Một tài liệu Markdown}
+\KwOut{Một tệp PDF}
+Biên dịch tài liệu\;
+\end{algorithm}
+
+\begin{lstlisting}
+print("offline")
+\end{lstlisting}
+
+\begin{tikzpicture}
+  \draw (0,0) rectangle (2,1);
+\end{tikzpicture}
+
+\begin{tabular}{ll}
+\toprule
+Hạng mục & Trạng thái \\
+\midrule
+Bundle & Ngoại tuyến \\
+\bottomrule
+\end{tabular}
+\end{document}

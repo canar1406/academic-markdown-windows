@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "raster": {
+    "width": 816,
+    "height": 1154,
+    "channelTolerance": 12
+  },
+  "blocks": [
+    { "id": "cover", "visualPage": 1, "pdfPage": 1, "region": { "left": 0, "top": 0, "right": 1, "bottom": 1 }, "comparison": "raster", "maxChangedFraction": 0.12 },
+    { "id": "toc", "visualPage": 2, "pdfPage": 2, "region": { "left": 0, "top": 0, "right": 1, "bottom": 1 }, "comparison": "raster", "maxChangedFraction": 0.015 },
+    { "id": "list-of-figures", "visualPage": 3, "pdfPage": 3, "region": { "left": 0, "top": 0, "right": 1, "bottom": 1 }, "comparison": "raster", "maxChangedFraction": 0.0125 },
+    { "id": "list-of-tables", "visualPage": 4, "pdfPage": 4, "region": { "left": 0, "top": 0, "right": 1, "bottom": 1 }, "comparison": "raster", "maxChangedFraction": 0.0125 },
+    { "id": "heading-1", "visualPage": 5, "pdfPage": 5, "region": { "left": 0.13, "top": 0.07, "right": 0.92, "bottom": 0.25 }, "comparison": "raster", "maxChangedFraction": 0.075 },
+    { "id": "heading-2", "visualPage": 6, "pdfPage": 6, "region": { "left": 0.13, "top": 0.07, "right": 0.92, "bottom": 0.25 }, "comparison": "raster", "maxChangedFraction": 0.07 },
+    { "id": "heading-3", "visualPage": 7, "pdfPage": 7, "region": { "left": 0.13, "top": 0.07, "right": 0.92, "bottom": 0.25 }, "comparison": "raster", "maxChangedFraction": 0.055 },
+    { "id": "heading-4", "visualPage": 8, "pdfPage": 8, "region": { "left": 0.13, "top": 0.07, "right": 0.92, "bottom": 0.25 }, "comparison": "raster", "maxChangedFraction": 0.07 },
+    { "id": "theorem", "visualPage": 9, "pdfPage": 9, "region": { "left": 0.13, "top": 0.07, "right": 0.92, "bottom": 0.28 }, "comparison": "raster", "maxChangedFraction": 0.055 },
+    { "id": "property", "visualPage": 10, "pdfPage": 10, "region": { "left": 0.13, "top": 0.07, "right": 0.92, "bottom": 0.28 }, "comparison": "raster", "maxChangedFraction": 0.06 },
+    { "id": "proposition", "visualPage": 11, "pdfPage": 11, "region": { "left": 0.13, "top": 0.07, "right": 0.92, "bottom": 0.28 }, "comparison": "raster", "maxChangedFraction": 0.06 },
+    { "id": "corollary", "visualPage": 12, "pdfPage": 12, "region": { "left": 0.13, "top": 0.07, "right": 0.92, "bottom": 0.28 }, "comparison": "raster", "maxChangedFraction": 0.05 },
+    { "id": "lemma", "visualPage": 13, "pdfPage": 13, "region": { "left": 0.13, "top": 0.07, "right": 0.92, "bottom": 0.28 }, "comparison": "raster", "maxChangedFraction": 0.055 },
+    { "id": "exercise", "visualPage": 14, "pdfPage": 14, "region": { "left": 0.13, "top": 0.07, "right": 0.92, "bottom": 0.28 }, "comparison": "raster", "maxChangedFraction": 0.05 },
+    { "id": "equation", "visualPage": 15, "pdfPage": 15, "region": { "left": 0.13, "top": 0.07, "right": 0.92, "bottom": 0.28 }, "comparison": "raster", "maxChangedFraction": 0.03 },
+    { "id": "figure-caption", "visualPage": 16, "pdfPage": 16, "region": { "left": 0.13, "top": 0.07, "right": 0.92, "bottom": 0.58 }, "comparison": "raster", "maxChangedFraction": 0.04 },
+    { "id": "table-caption", "visualPage": 17, "pdfPage": 17, "region": { "left": 0.13, "top": 0.07, "right": 0.92, "bottom": 0.42 }, "comparison": "raster", "maxChangedFraction": 0.065 },
+    { "id": "listing", "visualPage": 18, "pdfPage": 18, "region": { "left": 0.13, "top": 0.07, "right": 0.92, "bottom": 0.45 }, "comparison": "raster", "maxChangedFraction": 0.045 },
+    { "id": "page-break", "visualPage": 19, "pdfPage": 19, "region": { "left": 0.13, "top": 0.07, "right": 0.92, "bottom": 0.3 }, "comparison": "structural" },
+    { "id": "header", "visualPage": 5, "pdfPage": 5, "region": { "left": 0.1, "top": 0.045, "right": 0.94, "bottom": 0.115 }, "comparison": "raster", "maxChangedFraction": 0.19 },
+    { "id": "footer", "visualPage": 5, "pdfPage": 5, "region": { "left": 0.1, "top": 0.955, "right": 0.94, "bottom": 0.998 }, "comparison": "raster", "maxChangedFraction": 0.065 }
+  ]
+}

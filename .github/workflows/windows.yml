@@ -1,0 +1,66 @@
+name: Experimental Windows portable build (manual only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      acknowledge_private_experimental_build:
+        description: 'Build an unsigned private artifact containing uncleared HCMUT artwork; not a public release'
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Require explicit engineering-build acknowledgement
+        env:
+          ACKNOWLEDGED: ${{ inputs.acknowledge_private_experimental_build }}
+        run: |
+          if ($env:ACKNOWLEDGED -ne 'true') {
+            throw 'Acknowledge the experimental/private artifact constraints before dispatching.'
+          }
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: '10.15.0'
+          run_install: false
+
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: '8.0.425'
+
+      - name: Frozen install, shared gates, fresh web build, resources, native tests/smoke, build and ZIP
+        id: build
+        run: ./scripts/windows/Build-Windows.ps1
+
+      # No always() upload: a failed/absent native PDF smoke must not produce an
+      # apparently successful downloadable application artifact.
+      - name: Upload unsigned private engineering artifact
+        if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: AcademicMarkdown-windows-x64-experimental
+          path: |
+            ${{ steps.build.outputs.artifact_directory }}/*.zip
+            ${{ steps.build.outputs.artifact_directory }}/*.zip.sha256
+            ${{ steps.build.outputs.artifact_directory }}/README.md
+            ${{ steps.build.outputs.artifact_directory }}/test-results/*.trx
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0

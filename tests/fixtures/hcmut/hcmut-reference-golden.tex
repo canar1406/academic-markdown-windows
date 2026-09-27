@@ -1,0 +1,151 @@
+% Controlled Unicode-compatible fixture derived from the supplied HCMUT main.tex.
+% The untouched supplied template remains the historical source reference.
+\documentclass[a4paper]{article}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setdefaultlanguage{vietnamese}
+\setmainfont{Times New Roman}
+\usepackage{geometry,graphicx,fancyhdr,lastpage,hyperref,caption,booktabs,longtable,array,tabularx}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{xcolor,listings,tikz}
+\usetikzlibrary{calc}
+\geometry{a4paper,total={160mm,240mm},left=30mm,top=22mm,right=20mm,bottom=20mm}
+\setlength{\headheight}{40pt}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[L]{
+  \begin{tabular}{rl}
+    \begin{picture}(25,15)(0,0)
+      \put(0,-8){\includegraphics[width=10mm,height=10mm]{Images/hcmut.png}}
+    \end{picture}&
+    \begin{tabular}{l}
+      \textbf{Trường Đại Học Bách Khoa - Đại học Quốc gia TP.HCM}\\
+      \textbf{KHOA KHOA HỌC VÀ KỸ THUẬT MÁY TÍNH}
+    \end{tabular}
+  \end{tabular}
+}
+\fancyfoot{}
+\fancyfoot[L]{\scriptsize Báo cáo Đồ án môn học - HK1 2026 - 2027}
+\fancyfoot[R]{\scriptsize Trang {\thepage}/\pageref{LastPage}}
+\renewcommand{\footruleskip}{1mm}
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\footrulewidth}{0.3pt}
+\addtocontents{toc}{\protect\thispagestyle{empty}}
+\addtocontents{lof}{\protect\thispagestyle{empty}}
+\addtocontents{lot}{\protect\thispagestyle{empty}}
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{3}
+\makeatletter
+\newcounter{subsubsubsection}[subsubsection]
+\renewcommand\thesubsubsubsection{\thesubsubsection.\@alph\c@subsubsubsection}
+\newcommand\subsubsubsection{\@startsection{subsubsubsection}{4}{\z@}{-3.25ex\@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+\newcommand*\l@subsubsubsection{\@dottedtocline{3}{10.0em}{4.1em}}
+\makeatother
+\newtheorem{theorem}{Định lý}
+\newtheorem{property}{Tính chất}
+\newtheorem{proposition}{Mệnh đề}
+\newtheorem{corollary}[proposition]{Hệ quả}
+\newtheorem{lemma}[proposition]{Bổ đề}
+\theoremstyle{definition}
+\newtheorem{exer}{Bài toán}
+\captionsetup[figure]{labelfont={small,bf},textfont={small,it},belowskip=-1pt,aboveskip=-9pt}
+\captionsetup[table]{labelfont={small,bf},textfont={small,it},belowskip=-1pt,aboveskip=7pt}
+\setlength{\floatsep}{5pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{5pt plus 2pt minus 2pt}
+\setlength{\intextsep}{10pt plus 2pt minus 2pt}
+\lstset{basicstyle=\footnotesize\sffamily,commentstyle=\ttfamily\color{black},numbers=left,numberstyle=\ttfamily\color{black}\footnotesize,stepnumber=1,numbersep=5pt,backgroundcolor=\color{white},showspaces=false,showstringspaces=false,showtabs=false,frame=single,tabsize=2,captionpos=b,breaklines=true,breakatwhitespace=false,title=\lstname,keywordstyle={}}
+\hypersetup{urlcolor=blue,linkcolor=black,citecolor=black,colorlinks=true}
+
+\begin{document}
+\begin{titlepage}
+\begin{tikzpicture}[remember picture,overlay]
+  \draw[line width=4pt] ($(current page.north west)+(0.4in,-0.5in)$) rectangle ($(current page.south east)+(-0.4in,0.5in)$);
+  \draw[line width=1.5pt] ($(current page.north west)+(0.45in,-0.55in)$) rectangle ($(current page.south east)+(-0.45in,0.55in)$);
+\end{tikzpicture}
+\begin{center}
+{\LARGE\bfseries ĐẠI HỌC QUỐC GIA THÀNH PHỐ HỒ CHÍ MINH\par}
+\vspace{0.12cm}
+{\LARGE\bfseries TRƯỜNG ĐẠI HỌC BÁCH KHOA\par}
+\vspace{0.12cm}
+{\LARGE\bfseries KHOA KHOA HỌC VÀ KỸ THUẬT MÁY TÍNH\par}
+\vspace{0.18cm}
+\includegraphics[width=4cm]{Images/hcmut.png}
+\vspace{0.14cm}
+{\LARGE\bfseries ĐỒ ÁN MÔN HỌC\par}
+\vspace{0.28cm}
+{\LARGE\bfseries TRÌNH SOẠN THẢO BÁO CÁO MARKDOWN\par}
+\vspace{0.28cm}
+{\Large NGÀNH: KHOA HỌC MÁY TÍNH\par}
+\vspace{0.25cm}
+\begin{tabular}{rl}
+\textbf{\Large HỘI ĐỒNG:} & {\Large KHOA HỌC MÁY TÍNH} \\[0.28cm]
+\textbf{\Large GVHD:} & {\Large TS. NGUYỄN VĂN A} \\[0.28cm]
+\textbf{\Large TKHĐ:} & {\Large TS. TRẦN THỊ B} \\[0.28cm]
+\multicolumn{2}{c}{\textbf{\Large ---o0o---}} \\[0.28cm]
+\textbf{\Large SVTH1:} & {\Large Nguyễn Văn An (2210001)} \\[0.28cm]
+\textbf{\Large SVTH2:} & {\Large Trần Thị Bình (2210002)} \\[0.28cm]
+\textbf{\Large SVTH3:} & {\Large Lê Minh Châu (2210003)} \\[0.28cm]
+\end{tabular}
+\vfill
+{\Large\bfseries TP. HỒ CHÍ MINH, 2026\par}
+\vspace*{1.2cm}
+\end{center}
+\end{titlepage}
+
+\clearpage
+\tableofcontents
+\clearpage
+\listoffigures
+\clearpage
+\listoftables
+\clearpage
+\setcounter{page}{1}
+
+\section{Giới thiệu}
+Tài liệu kiểm thử tiếng Việt, \textbf{chữ đậm}, \emph{chữ nghiêng} và công thức $a^2+b^2=c^2$.
+
+\subsection{Mức hai}
+\subsubsection{Mức ba}
+\subsubsubsection{Mức bốn}
+\begin{theorem}[Định lý mẫu]
+\label{thm-golden}
+Với mọi số thực $x$, ta có $x^2 \geq 0$.
+\end{theorem}
+\begin{property}
+\label{prop-golden}
+Tính chất mẫu.
+\end{property}
+\begin{proposition}
+\label{proposition-golden}
+Mệnh đề mẫu.
+\end{proposition}
+\begin{corollary}
+\label{corollary-golden}
+Hệ quả mẫu.
+\end{corollary}
+\begin{lemma}
+\label{lemma-golden}
+Bổ đề mẫu.
+\end{lemma}
+\begin{exer}
+\label{exercise-golden}
+Bài toán mẫu.
+\end{exer}
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{ll}
+\toprule
+Cột A & Cột B \\
+\midrule
+Một & Hai \\
+\bottomrule
+\end{tabular}
+\caption{Bảng dữ liệu mẫu}
+\label{tbl-golden}
+\end{table}
+
+\begin{lstlisting}[language=swift,numbers=left,caption={Mã nguồn mẫu},label={lst-golden}]
+print("Xin chào HCMUT")
+\end{lstlisting}
+\end{document}

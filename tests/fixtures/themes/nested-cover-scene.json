@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 2,
+  "page": {
+    "size": "A4",
+    "widthMm": 210,
+    "heightMm": 297
+  },
+  "tokens": {
+    "ink": {
+      "type": "color",
+      "value": "#204060"
+    }
+  },
+  "variants": {},
+  "bindings": [],
+  "root": {
+    "id": "page",
+    "widget": "page",
+    "version": 1,
+    "properties": {},
+    "style": {
+      "fontSizePt": 12,
+      "fontFamily": "serif",
+      "color": "#111111"
+    },
+    "children": [
+      {
+        "id": "cover",
+        "widget": "cover",
+        "version": 1,
+        "properties": {
+          "gapMm": 6,
+          "paddingMm": 4,
+          "title": "Cover layer label — not emitted"
+        },
+        "style": {
+          "fontSizePt": 12
+        },
+        "children": [
+          {
+            "id": "row",
+            "widget": "row",
+            "version": 1,
+            "properties": {
+              "gapMm": 8
+            },
+            "style": {},
+            "children": [
+              {
+                "id": "left",
+                "widget": "column",
+                "version": 1,
+                "properties": {
+                  "paddingMm": 2,
+                  "gapMm": 3
+                },
+                "style": {
+                  "color": {
+                    "token": "ink"
+                  },
+                  "fontWeight": "bold"
+                },
+                "children": [
+                  {
+                    "id": "left-text",
+                    "widget": "text",
+                    "version": 1,
+                    "properties": {
+                      "text": "Left & safe — Trái"
+                    },
+                    "style": {},
+                    "children": []
+                  },
+                  {
+                    "id": "left-detail",
+                    "widget": "text",
+                    "version": 1,
+                    "properties": {
+                      "text": "Chi tiết thứ hai"
+                    },
+                    "style": {
+                      "fontWeight": "normal",
+                      "fontStyle": "italic"
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "right",
+                "widget": "column",
+                "version": 1,
+                "properties": {},
+                "style": {},
+                "children": [
+                  {
+                    "id": "right-text",
+                    "widget": "text",
+                    "version": 1,
+                    "properties": {
+                      "text": "Right % safe — Phải"
+                    },
+                    "style": {},
+                    "children": []
+                  },
+                  {
+                    "id": "inner-row",
+                    "widget": "row",
+                    "version": 1,
+                    "properties": {
+                      "gapMm": 4
+                    },
+                    "style": {
+                      "fontSizePt": 10
+                    },
+                    "children": [
+                      {
+                        "id": "inner-left",
+                        "widget": "column",
+                        "version": 1,
+                        "properties": {},
+                        "style": {},
+                        "children": [
+                          {
+                            "id": "inner-left-text",
+                            "widget": "text",
+                            "version": 1,
+                            "properties": {
+                              "text": "Inner one"
+                            },
+                            "style": {},
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "id": "inner-right",
+                        "widget": "column",
+                        "version": 1,
+                        "properties": {},
+                        "style": {},
+                        "children": [
+                          {
+                            "id": "inner-right-text",
+                            "widget": "text",
+                            "version": 1,
+                            "properties": {
+                              "text": "Inner two"
+                            },
+                            "style": {},
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "closing",
+            "widget": "text",
+            "version": 1,
+            "properties": {
+              "text": "Nguyễn Ánh — Kết luận",
+              "alignment": "center"
+            },
+            "style": {},
+            "children": []
+          }
+        ]
+      }
+    ]
+  }
+}

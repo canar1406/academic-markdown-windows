@@ -1,0 +1,72 @@
+[
+  {
+    "name": "editor readiness with null request",
+    "valid": true,
+    "envelope": { "protocolVersion": 1, "type": "editor.ready", "requestId": null, "payload": {} }
+  },
+  {
+    "name": "Unicode source snapshot",
+    "valid": true,
+    "envelope": {
+      "protocolVersion": 1,
+      "type": "document.markdown",
+      "requestId": "snapshot-1",
+      "payload": { "markdown": "# Võ Nguyễn Hoàng Long\n\n$|x|$", "revision": 4 }
+    }
+  },
+  {
+    "name": "shared LaTeX export response",
+    "valid": true,
+    "envelope": {
+      "protocolVersion": 1,
+      "type": "export.latex",
+      "requestId": "export-1",
+      "payload": { "latex": "\\begin{document}Tiếng Việt\\end{document}", "assetPaths": [], "diagnostics": [], "revision": 4 }
+    }
+  },
+  {
+    "name": "unknown v1 event stays forward compatible",
+    "valid": true,
+    "envelope": { "protocolVersion": 1, "type": "future.event", "requestId": null, "payload": { "extension": true } }
+  },
+  {
+    "name": "future protocol must not be executed",
+    "valid": false,
+    "envelope": { "protocolVersion": 2, "type": "editor.ready", "requestId": null, "payload": {} }
+  },
+  {
+    "name": "null is not an envelope",
+    "valid": false,
+    "envelope": null
+  },
+  {
+    "name": "payload must not be an array",
+    "valid": false,
+    "envelope": { "protocolVersion": 1, "type": "editor.ready", "requestId": null, "payload": [] }
+  },
+  {
+    "name": "missing payload",
+    "valid": false,
+    "envelope": { "protocolVersion": 1, "type": "editor.ready", "requestId": null }
+  },
+  {
+    "name": "missing request ID is not null",
+    "valid": false,
+    "envelope": { "protocolVersion": 1, "type": "editor.ready", "payload": {} }
+  },
+  {
+    "name": "empty type",
+    "valid": false,
+    "envelope": { "protocolVersion": 1, "type": "", "requestId": null, "payload": {} }
+  },
+  {
+    "name": "whitespace type",
+    "valid": false,
+    "envelope": { "protocolVersion": 1, "type": "   ", "requestId": null, "payload": {} }
+  },
+  {
+    "name": "request ID must be string or null",
+    "valid": false,
+    "envelope": { "protocolVersion": 1, "type": "editor.ready", "requestId": 123, "payload": {} }
+  }
+]

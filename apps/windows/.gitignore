@@ -1,0 +1,15 @@
+# Generated native products; never ignore source projects.
+**/bin/
+**/obj/
+.vs/
+.cache/
+artifacts/
+TestResults/
+**/*.user
+**/*.suo
+
+# Rebuilt from apps/editor/dist and the pinned packaging manifest.
+AcademicMarkdown.Windows/Resources/
+.Resources-stage-*/
+AcademicMarkdown.Windows/.Resources-stage-*/
+AcademicMarkdown.Windows/Resources.previous-*/

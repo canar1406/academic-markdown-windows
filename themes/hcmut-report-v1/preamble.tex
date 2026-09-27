@@ -1,0 +1,60 @@
+\documentclass[a4paper]{article}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setdefaultlanguage{vietnamese}
+\usepackage{mathptmx}
+\setmainfont{Times New Roman}
+% mathptmx maps \mathbf to an unavailable extended-bold shape under XeTeX.
+% Reuse its real bold Times shape instead of allowing a silent fallback.
+\usepackage[normalem]{ulem}
+\usepackage{geometry,graphicx,fancyhdr,lastpage,hyperref,caption,booktabs,longtable,array,tabularx}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{xcolor,listings,tikz}
+\AtBeginDocument{%
+  \DeclareSymbolFont{bold}{OT1}{ptm}{b}{n}%
+  \DeclareMathAlphabet{\mathbf}{OT1}{ptm}{b}{n}%
+}
+\usetikzlibrary{calc}
+% Keep the supplied HCMUT margins explicit.  The previous `total` option
+% contradicted the vertical margins and made geometry report an over-specified
+% page, leaving fancyhdr's footer baseline on the A4 edge.
+\geometry{a4paper,left=30mm,top=22mm,right=20mm,bottom=20mm}
+\setlength{\headheight}{40pt}
+% Leave a small, deterministic safety band below the footer rule/text.
+\setlength{\footskip}{24pt}
+\pagestyle{fancy}
+\fancyhead{}
+{{{header}}}
+\fancyfoot{}
+{{{footer}}}
+\renewcommand{\footruleskip}{1mm}
+\renewcommand{\headrulewidth}{{{{headRuleWidth}}}}
+\renewcommand{\footrulewidth}{{{{footRuleWidth}}}}
+\addtocontents{toc}{\protect\thispagestyle{empty}}
+\addtocontents{lof}{\protect\thispagestyle{empty}}
+\addtocontents{lot}{\protect\thispagestyle{empty}}
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{{{{tocDepth}}}}
+\makeatletter
+\newcounter{subsubsubsection}[subsubsection]
+\renewcommand\thesubsubsubsection{\thesubsubsection.\@alph\c@subsubsubsection}
+\newcommand\subsubsubsection{\@startsection{subsubsubsection}{4}{\z@}{-3.25ex\@plus -1ex \@minus -.2ex}{1.5ex \@plus .2ex}{\normalfont\normalsize\bfseries}}
+\newcommand*\l@subsubsubsection{\@dottedtocline{3}{10.0em}{4.1em}}
+\makeatother
+\newtheorem{theorem}{Định lý}
+\newtheorem{property}{Tính chất}
+\newtheorem{proposition}{Mệnh đề}
+\newtheorem{corollary}[proposition]{Hệ quả}
+\newtheorem{lemma}[proposition]{Bổ đề}
+\theoremstyle{definition}
+\newtheorem{exer}{Bài toán}
+\captionsetup[figure]{labelfont={small,bf},textfont={small,it},belowskip=-1pt,aboveskip=-9pt}
+\captionsetup[table]{labelfont={small,bf},textfont={small,it},belowskip=-1pt,aboveskip=7pt}
+\setlength{\floatsep}{5pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{5pt plus 2pt minus 2pt}
+\setlength{\intextsep}{10pt plus 2pt minus 2pt}
+\lstset{language=R,basicstyle=\footnotesize\sffamily,commentstyle=\ttfamily\color{black},numbers=left,numberstyle=\ttfamily\color{black}\footnotesize,stepnumber=1,numbersep=5pt,backgroundcolor=\color{white},showspaces=false,showstringspaces=false,showtabs=false,frame=single,tabsize=2,captionpos=b,breaklines=true,breakatwhitespace=false,title=\lstname,escapeinside={},keywordstyle={},morekeywords={}}
+% Cover/front-matter and body may all restart at page 1. Use unique internal
+% PDF destinations without changing the printed page numbers.
+\hypersetup{urlcolor=blue,linkcolor=black,citecolor=black,colorlinks=true,hypertexnames=false}
+\sloppy
