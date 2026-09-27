@@ -1,10 +1,10 @@
 import { beforeAll, afterAll, describe, expect, it } from 'vitest';
-import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { analyzeLatexThemeImport, discoverLatexThemeProjects, type LatexThemeImportEntry } from '../src/index.js';
+import { extractArchiveFixture } from './helpers/archive-fixture.js';
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 const archive = join(repositoryRoot, 'Template Latex.zip');
@@ -12,11 +12,11 @@ let staging = '';
 let entries: LatexThemeImportEntry[] = [];
 
 beforeAll(() => {
-  staging = mkdtempSync(join(tmpdir(), 'academic-template-latex-import-'));
-  execFileSync('/usr/bin/ditto', ['-x', '-k', archive, staging]);
+  staging = mkdtempSync(join(tmpdir(), "academic-template-latex-import-Tiếng Việt '[fixture]-"));
+  extractArchiveFixture(archive, staging);
   entries = [];
   collectEntries(staging, staging, entries);
-});
+}, 120_000);
 
 afterAll(() => {
   if (staging) rmSync(staging, { recursive: true, force: true });
