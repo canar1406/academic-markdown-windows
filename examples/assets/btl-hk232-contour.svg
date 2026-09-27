@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+  <rect width="1200" height="760" fill="white"/>
+  <g stroke="#d8d8d8" stroke-width="2">
+    <path d="M100 100H1120M100 200H1120M100 300H1120M100 400H1120M100 500H1120M100 600H1120"/>
+    <path d="M200 60V690M350 60V690M500 60V690M650 60V690M800 60V690M950 60V690"/>
+  </g>
+  <g fill="none" stroke="#1769aa" stroke-width="5">
+    <ellipse cx="600" cy="375" rx="430" ry="90" transform="rotate(-25 600 375)"/>
+    <ellipse cx="600" cy="375" rx="330" ry="70" transform="rotate(-25 600 375)"/>
+    <ellipse cx="600" cy="375" rx="225" ry="48" transform="rotate(-25 600 375)"/>
+    <ellipse cx="600" cy="375" rx="120" ry="26" transform="rotate(-25 600 375)"/>
+  </g>
+  <g stroke="#222" stroke-width="4">
+    <path d="M95 650H1135"/><path d="M130 700V45"/>
+  </g>
+  <g fill="#222" font-family="Times New Roman" font-size="28">
+    <text x="1140" y="660">x</text><text x="115" y="38">y</text>
+  </g>
+  <circle cx="710" cy="330" r="12" fill="#b21e35"/>
+  <path d="M710 330L1000 155" stroke="#b21e35" stroke-width="10"/>
+  <path d="M1000 155l-45 5 25 37z" fill="#b21e35"/>
+  <path d="M710 330L420 505" stroke="#d27c18" stroke-width="8" stroke-dasharray="18 12"/>
+  <path d="M420 505l45-5-25-37z" fill="#d27c18"/>
+  <g fill="#222" font-family="Times New Roman" font-size="30">
+    <text x="730" y="315">P(1,1)</text>
+    <text x="910" y="125">steepest ascent</text>
+    <text x="250" y="555">steepest descent</text>
+  </g>
+</svg>
