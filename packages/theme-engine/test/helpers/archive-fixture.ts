@@ -6,7 +6,9 @@ export function extractArchiveFixture(archive: string, destination: string): voi
     case 'win32':
       execFileSync('pwsh', [
         '-NoLogo', '-NoProfile', '-NonInteractive', '-Command',
-        "$ErrorActionPreference = 'Stop'; Expand-Archive -LiteralPath $env:ACADEMIC_TEST_ARCHIVE -DestinationPath $env:ACADEMIC_TEST_DESTINATION",
+        // Expand-Archive internally treats brackets in the destination as a glob.
+        // ZipFile's path API treats both inputs literally and keeps file bytes intact.
+        "$ErrorActionPreference = 'Stop'; [System.IO.Compression.ZipFile]::ExtractToDirectory($env:ACADEMIC_TEST_ARCHIVE, $env:ACADEMIC_TEST_DESTINATION)",
       ], {
         env: {
           ...process.env,
