@@ -79,6 +79,30 @@ catch {
             ForEach-Object { Write-Host ($_.Message.Substring(0, [Math]::Min(4000, $_.Message.Length))) }
     }
     catch { Write-Host 'Windows event log was unavailable for diagnostics.' }
+    $debugger = @(
+        "${env:ProgramFiles(x86)}\Windows Kits\10\Debuggers\x64\cdb.exe",
+        "$env:ProgramFiles\Windows Kits\10\Debuggers\x64\cdb.exe"
+    ) | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+    if ($debugger) {
+        # Diagnose only our empty-document executable. No dump is uploaded and no
+        # debugger is installed or attached to a user process.
+        $debugLog = [IO.Path]::ChangeExtension($ReportPath, '.native-debug.log')
+        $commandPath = [IO.Path]::ChangeExtension($ReportPath, '.native-debug.cmd')
+        [IO.File]::WriteAllText($commandPath, 'sxe -c ".exr -1; !analyze -v; q" 0xc000027b' + "`r`ng`r`n")
+        $debugProcess = Start-Process -FilePath $debugger -ArgumentList @(
+            '-o', '-g', '-G', '-logo', "`"$debugLog`"", '-cf', "`"$commandPath`"", "`"$executablePath`""
+        ) -WorkingDirectory (Split-Path $executablePath) -PassThru
+        try {
+            if (!$debugProcess.WaitForExit(90000)) {
+                & taskkill.exe /PID $debugProcess.Id /T /F | Out-Null
+            }
+            if (Test-Path -LiteralPath $debugLog) {
+                Get-Content -LiteralPath $debugLog -Tail 140 | Write-Host
+            }
+        }
+        finally { $debugProcess.Dispose() }
+    }
+    else { Write-Host 'Windows SDK CDB is not installed on this runner.' }
     throw
 }
 finally {
