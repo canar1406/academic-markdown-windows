@@ -24,7 +24,11 @@ internal sealed partial class MainWindow : Window
         Opacity = 0.85,
         Visibility = Visibility.Visible
     };
-    private readonly InfoBar notice = new() { IsClosable = true };
+    // InfoBar hits the same unpackaged ms-appx/generic.xaml DefaultStyleResourceUri
+    // failure as MenuBar once that is fixed. Built by hand so startup never depends
+    // on that resource lookup for this control either.
+    private readonly Grid notice = new() { Visibility = Visibility.Collapsed, Padding = new Thickness(12, 8, 12, 8), ColumnSpacing = 8 };
+    private readonly TextBlock noticeText = new() { TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center };
     private readonly TextBlock status = new() { Text = "Starting local editor…", VerticalAlignment = VerticalAlignment.Center };
     private readonly ToggleButton visual = new() { Content = "Visual", IsChecked = true };
     private readonly ToggleButton source = new() { Content = "Source" };
@@ -128,6 +132,14 @@ internal sealed partial class MainWindow : Window
             VerticalScrollBarVisibility = ScrollBarVisibility.Disabled
         };
         Place(scrollingToolbar, 1);
+        notice.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        notice.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        notice.Children.Add(noticeText);
+        var noticeClose = new Button { Content = "✕", Padding = new Thickness(8, 2, 8, 2) };
+        noticeClose.Click += (_, _) => notice.Visibility = Visibility.Collapsed;
+        AutomationProperties.SetName(noticeClose, "Dismiss notice");
+        Grid.SetColumn(noticeClose, 1);
+        notice.Children.Add(noticeClose);
         Place(notice, 2);
         AutomationProperties.SetName(editor, "Markdown editor");
         Place(editor, 3);
@@ -344,10 +356,17 @@ internal sealed partial class MainWindow : Window
     private void ShowNotice(string message, InfoBarSeverity severity)
     {
         if (closed) return;
-        notice.Title = severity == InfoBarSeverity.Error ? "Operation stopped" : "Windows preview";
-        notice.Message = message.Length <= 2400 ? message : message[..2400] + "…";
-        notice.Severity = severity;
-        notice.IsOpen = true;
+        var title = severity == InfoBarSeverity.Error ? "Operation stopped" : "Windows preview";
+        var trimmed = message.Length <= 2400 ? message : message[..2400] + "…";
+        noticeText.Text = $"{title}: {trimmed}";
+        notice.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(severity switch
+        {
+            InfoBarSeverity.Error => Colors.IndianRed,
+            InfoBarSeverity.Warning => Colors.Goldenrod,
+            InfoBarSeverity.Success => Colors.MediumSeaGreen,
+            _ => Colors.LightSteelBlue,
+        });
+        notice.Visibility = Visibility.Visible;
     }
 
     private async void WindowClosing(AppWindow sender, AppWindowClosingEventArgs args)
