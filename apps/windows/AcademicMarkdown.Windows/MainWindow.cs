@@ -78,8 +78,12 @@ internal sealed partial class MainWindow : Window
             new GridLength(1, GridUnitType.Star), GridLength.Auto })
             root.RowDefinitions.Add(new RowDefinition { Height = height });
 
-        var menu = new MenuBar();
-        var fileMenu = new MenuBarItem { Title = "File" };
+        // MenuBar's default style loads via ms-appx:///Microsoft.UI.Xaml/Themes/generic.xaml,
+        // which requires package identity. This app is unpackaged/self-contained, so that
+        // resource lookup fails and fails fast (0xc000027b) the moment MenuBar is constructed.
+        // Button + MenuFlyout provide the same menu semantics without that dependency.
+        var menu = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+        var fileMenu = new MenuFlyout();
         AddMenu(fileMenu, "New", "new", true);
         AddMenu(fileMenu, "Open…", "open", true);
         AddMenu(fileMenu, "Save", "save", true);
@@ -87,14 +91,14 @@ internal sealed partial class MainWindow : Window
         fileMenu.Items.Add(new MenuFlyoutSeparator());
         AddMenu(fileMenu, "Export PDF…", "export");
         AddMenu(fileMenu, "Close", "close");
-        menu.Items.Add(fileMenu);
-        var editMenu = new MenuBarItem { Title = "Edit" };
+        menu.Children.Add(MenuButton("File", fileMenu));
+        var editMenu = new MenuFlyout();
         AddMenu(editMenu, "Find", "find");
         AddMenu(editMenu, "Replace", "replace");
         AddMenu(editMenu, "Find Next", "next");
         AddMenu(editMenu, "Find Previous", "previous");
         AddMenu(editMenu, "Replace All", "replaceAll");
-        menu.Items.Add(editMenu);
+        menu.Children.Add(MenuButton("Edit", editMenu));
         Place(menu, 0);
 
         var toolbar = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
@@ -160,12 +164,19 @@ internal sealed partial class MainWindow : Window
 
     private void Place(FrameworkElement element, int row) { Grid.SetRow(element, row); root.Children.Add(element); }
 
-    private void AddMenu(MenuBarItem menu, string text, string command, bool fileOperation = false)
+    private void AddMenu(MenuFlyout menu, string text, string command, bool fileOperation = false)
     {
         var item = new MenuFlyoutItem { Text = text, Tag = command };
         item.Click += CommandClicked;
         menu.Items.Add(item);
         if (fileOperation) fileControls.Add(item);
+    }
+
+    private static Button MenuButton(string title, MenuFlyout flyout)
+    {
+        var button = new Button { Content = title, Flyout = flyout };
+        AutomationProperties.SetName(button, $"{title} menu");
+        return button;
     }
 
     private Button ToolButton(string title, string command)
