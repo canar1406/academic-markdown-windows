@@ -5,9 +5,13 @@ This WinUI 3/WebView2 shell is the implementation exception in
 macOS shell. Markdown, LMX, theme semantics and LaTeX export remain in the shared
 TypeScript packages. Windows native code owns platform IO and process execution.
 
-**Status:** Windows build/runtime acceptance is pending. Local portable tests
-or resource staging on macOS are not a successful Windows build. No Windows
-binary, signed release, or installer is promised by this README.
+**Status:** The private Windows x64 workflow `38938608742`, built from
+`00dfb0cbd1e28509636fe93e7594a1cdebf50f70`, passed WinUI build/publish, the real
+offline PDF smoke and native editor startup on 2026-10-17. Native core tests:
+52 passed, one skipped symlink-privilege fixture. Full interactive/IME acceptance
+remains pending. Local portable tests or resource staging on macOS alone are
+not Windows acceptance. This is an unsigned portable engineering build, not
+a signed release or installer.
 
 Implementation and verified checks: `docs/windows-checkpoint-20260927.md`.
 The shell includes file lifecycle, Visual/Source, Find/Replace, zoom, page actions
@@ -78,5 +82,6 @@ node scripts/windows/resource-tools.mjs validate
 See `docs/windows-build.md` for resource-only staging, troubleshooting, manual
 Windows acceptance checks, and the inert manual-dispatch workflow. Merely
 creating `.github/workflows/windows.yml` does not run CI, upload this repository,
-or authorize a remote. No remote creation, push, dispatch, or release is part of
-this implementation.
+or authorize a remote. Private source push and manual dispatch were explicitly
+requested by the user; the verified October 17 build is recorded in
+`docs/windows-cloud-build.md`. No public release is created.

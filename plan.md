@@ -8,7 +8,9 @@
 > PDF engine: Tectonic/XeTeX-compatible pipeline
 > Windows: original release deferral remains; user-authorized experimental shell
 > work now proceeds under `docs/adr/010-experimental-windows-shell.md` and
-> `docs/plans/windows-port.md`. No Windows binary has been verified.
+> `docs/plans/windows-port.md`. The private Windows x64 engineering build,
+> offline PDF smoke and native editor-startup gate passed on 2026-10-17;
+> full interactive acceptance and public release remain separate gates.
 
 > 2026-09-08 clarification: use the user's 19:34 Monday 2026-09-07
 > instructions/screenshots as the primary requirements. The detailed

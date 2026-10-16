@@ -128,3 +128,47 @@ October 2 artifact is not delivery of the October 17 source. Build/run identity,
 checksums and the downloaded artifact are recorded in the local QC evidence
 directory and updated here after verification. This is an unsigned private
 engineering build, not a public release or Windows Theme Studio UI parity.
+
+### Verified current-source Windows run
+
+- Source commit: `00dfb0cbd1e28509636fe93e7594a1cdebf50f70`.
+- Branch: `codex/windows-ci`; repository remains private.
+- Run: `38938608742`, requested and completed on 2026-10-17 local time.
+- Job duration: 5 minutes 35 seconds.
+- Frozen shared gates, fresh web bundle and pinned resource staging: passed.
+- Windows native core: 52 passed, zero failed, one skipped symlink-privilege test.
+- Real bundled Windows Tectonic/offline PDF smoke: passed.
+- WinUI build: zero warnings and zero errors; publish/package passed.
+- Native startup: real WinUI window, editor.ready and document-load
+  acknowledgement visible; smoke passed.
+- Private artifact: `12062681389`, `AcademicMarkdown-windows-x64-experimental`.
+- Portable ZIP SHA-256:
+  `fcb405805c73c876904eb5cf7f135037a9c9add4e1e36ee4da43841298bfaf58`.
+
+The runner warns that the pinned action implementations target deprecated
+Node 20 and are being hosted on Node 24. The application's pinned Node 22/pnpm
+toolchain and all required gates still pass; no dependency pins were silently
+changed for this run.
+
+The output is a full portable directory/ZIP containing
+`AcademicMarkdown.Windows.exe`, runtime DLLs and Resources, not a standalone
+single-file EXE. Downloaded bytes and the complete checksum inventory must be
+verified before local delivery. CI evidence and the local verification result
+are retained in `results.json` under the editor/Studio QC evidence directory.
+
+### Local delivery verified
+
+The new artifact is downloaded to
+`/Users/Heavietnam/Desktop/Academic-Markdown-Windows-20261017/`.
+Its ZIP matches the CI SHA-256, ZIP CRC validation passes, and all 1,202
+published file checksums and the resource inventory match. Both the application
+and bundled compiler have Windows x64 PE headers. The downloaded TRX and startup
+report independently confirm the native PDF smoke and Ready/load acknowledgement.
+No Windows executable is run on macOS.
+
+Executable:
+`/Users/Heavietnam/Desktop/Academic-Markdown-Windows-20261017/AcademicMarkdown-windows-x64-experimental/AcademicMarkdown.Windows.exe`.
+Keep its complete extracted directory together; do not substitute the old
+September build in `Desktop/Academic-Markdown-Windows`.
+`verification.json` in the new delivery directory records the verified paths,
+hashes and scoped acceptance. This remains unsigned, private and experimental.

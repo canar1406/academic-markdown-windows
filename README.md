@@ -10,7 +10,7 @@ Successful build artifacts contain a full portable ZIP, not a single standalone 
 
 ## Status and rights
 
-The October 2, 2026 workflow passed build, the real offline PDF smoke and native editor startup. The October 17 editor/theme update must pass a fresh workflow before delivery; an old successful artifact is not acceptance of new source. Full manual Windows interaction/IME acceptance remains separate. Theme Studio native authoring is not ported. Preserve all notices; HCMUT/logo distribution and TeX/native dependency license/provenance review remain gates before any public release.
+The October 17, 2026 workflow `38938608742`, from source commit `00dfb0cbd1e28509636fe93e7594a1cdebf50f70`, passes build/publish, the real offline PDF smoke and native editor startup. Native core tests: 52 passed, one skipped symlink-privilege fixture. The downloaded ZIP and all 1,202 published file checksums are verified. See `docs/windows-cloud-build.md` for the run and artifact identity. Full manual Windows interaction/IME acceptance remains separate. Theme Studio native authoring is not ported. Preserve all notices; HCMUT/logo distribution and TeX/native dependency license/provenance review remain gates before any public release.
 
 This snapshot was prepared with user authorization for a private repository and Windows CI. No secrets were detected by the bounded pre-upload pattern scan; this is not a full security or license audit.
 
