@@ -3,6 +3,10 @@
 Status: additive implementation decision for the first independent authoring slice.
 This does not declare full Elementor authoring or imported-template parity complete.
 
+2026-10-16 update: ADR 011 adds allowlisted text metadata bindings and a
+compiled-PDF mode inside Studio. The original literal-only/bindings rejection
+description below records the initial slice, not the current binding capability.
+
 ## Decision
 
 Introduce optional `lmx.authoredTheme` in Markdown front matter:

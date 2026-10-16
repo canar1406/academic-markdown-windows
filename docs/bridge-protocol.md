@@ -21,6 +21,13 @@ fields separately. Windows requests time out and pending requests are cancelled
 when the host is closed. Document identity stays native and guards revision 0
 across document switches; it is not serialized into Markdown.
 
+All macOS request/response operations now have a deadline (20 seconds by
+default), including Markdown, metadata, metadata updates, theme application and
+LaTeX requests. A failed asynchronous WebView delivery completes the matching
+request immediately. Cancellation, replacement of the bridge sender and detach
+complete pending requests exactly once; late responses cannot complete them
+again. These changes do not change the v1 envelope.
+
 Document image URLs are a local transport concern, not stored Markdown:
 `app-document://local/…` on macOS,
 `https://document.academic-markdown.invalid/…` on Windows. The Windows host serves
@@ -56,6 +63,20 @@ then emits `editor.modeChanged`:
 it as the authoritative Picker value. A rejected Source-to-Visual transition
 keeps the raw source intact, leaves only Source visible, and reports validation
 diagnostics in the web editor.
+
+## Studio starter catalog
+
+The native Studio requests the shared, original academic starters using
+`studio.requestStarters` with an empty payload and a non-null request ID.
+JavaScript replies with `studio.starterThemes`, the matching request ID and
+`{ "themes": [AuthoredThemeSnapshot, ...] }`. The native projection bounds and
+decodes this catalog; applying a starter is an undoable draft operation, not an
+implicit install or report mutation.
+
+Studio preview/drop/selection messages continue using their active scene request
+ID. The root A4 canvas exposes the scene root ID as a drop target, so a blank
+scene can receive its first supported container. The interactive sample stays
+read-only; scene changes go through the native model and shared compiler.
 
 ## Metadata invalidation
 

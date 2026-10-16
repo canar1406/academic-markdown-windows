@@ -1,4 +1,5 @@
 import { escapeLatexText, validateThemeScene, type LatexTheme, type ThemeSceneV2, type ThemeSceneNode, type ThemeDocumentSettings } from './index.js';
+import { resolveAuthoredBindings } from './authored-bindings.js';
 
 export interface AuthoredThemeSnapshot {
   schemaVersion: 1;
@@ -20,6 +21,7 @@ export interface AuthoredLayout {
 export interface AuthoredThemeCompilation {
   theme?: LatexTheme;
   snapshot?: AuthoredThemeSnapshot;
+  resolvedScene?: ThemeSceneV2;
   /** One geometry tree; region properties reference nodes in this tree. */
   layout?: AuthoredLayout;
   rootSectionLayouts?: AuthoredLayout[];
@@ -35,7 +37,7 @@ const widgets = new Set([...layoutParents, ...layoutWidgets, 'paragraph', 'headi
 const styleKeys = new Set(['color', 'accent', 'background', 'fontFamily', 'fontSizePt', 'fontWeight', 'fontStyle', 'lineHeight']);
 function record(v: unknown): v is Record<string, unknown> { return !!v && typeof v === 'object' && !Array.isArray(v); }
 
-export function compileAuthoredTheme(value: unknown): AuthoredThemeCompilation {
+export function compileAuthoredTheme(value: unknown, metadata: Record<string, unknown> = {}): AuthoredThemeCompilation {
   // Bound JSON data before recursive shared scene validation (including cycles).
   const pending: Array<{value: unknown; depth: number}> = [{value, depth: 0}];
   let count=0, text=0;
@@ -56,7 +58,9 @@ export function compileAuthoredTheme(value: unknown): AuthoredThemeCompilation {
   const checked=validateThemeScene(value.scene);
   if (!checked.valid) return {errors: checked.errors};
   const snapshot=value as unknown as AuthoredThemeSnapshot;
-  const scene=snapshot.scene;
+  const bound = resolveAuthoredBindings(snapshot.scene, metadata);
+  if (bound.errors.length) return { errors: bound.errors };
+  const scene=bound.scene;
   const errors: string[]=[];
   const nodes: ThemeSceneNode[]=[];
   const resolved = new Map<string, Record<string, string | number>>();
@@ -64,7 +68,6 @@ export function compileAuthoredTheme(value: unknown): AuthoredThemeCompilation {
     // Layout descendants are content, never document-wide style definitions.
     if (!insideLayout) nodes.push(node);
     if (!widgets.has(node.widget) || node.version!==1) errors.push(`Unsupported authored widget: ${node.widget}@${node.version}.`);
-    if (node.bindings && Object.keys(node.bindings).length) errors.push(`Bindings are not yet supported: ${node.id}.`);
     if (node.children.length && !['page','stack','body'].includes(node.widget) && !layoutParents.has(node.widget)) errors.push(`Custom child layout is not yet supported: ${node.id}.`);
     if (node.widget === 'row') {
       if (node.children.length > 8 || node.children.some(child => child.widget !== 'column')) errors.push(`Rows require 0–8 column children: ${node.id}.`);
@@ -73,7 +76,8 @@ export function compileAuthoredTheme(value: unknown): AuthoredThemeCompilation {
       && node.children.some(child => !layoutWidgets.has(child.widget) && !['stack','body'].includes(child.widget))) errors.push(`Unsupported authored layout child: ${node.id}.`);
     const style={...inherited};
     delete style.background;
-    for (const [key,raw] of Object.entries(node.style)) {
+    for (const key of Object.keys(node.style).sort()) {
+      const raw = node.style[key];
       if (!styleKeys.has(key)) { errors.push(`Unsupported authored style: ${key}.`); continue; }
       let v: unknown=raw;
       if (record(raw) && typeof raw.token==='string') {
@@ -122,7 +126,6 @@ export function compileAuthoredTheme(value: unknown): AuthoredThemeCompilation {
     node.children.forEach(child=>visit(child,style,insideLayout || ['cover','header','footer','section','row','column'].includes(node.widget)));
   }
   visit(scene.root,{});
-  if (scene.bindings.length) errors.push('Declared bindings are not supported by this authored theme version.');
   if (Object.keys(scene.variants).length) errors.push('Authored variation references are not yet supported. Apply explicit tokens first.');
   for (const widget of ['cover','header','footer','paragraph']) if (nodes.filter(n=>n.widget===widget).length>1) errors.push(`Multiple ${widget} definitions are not supported.`);
   const headingLevels=nodes.filter(n=>n.widget==='heading').map(n=>Number(n.properties.level??2));
@@ -244,8 +247,8 @@ export function compileAuthoredTheme(value: unknown): AuthoredThemeCompilation {
 ${regionDefinitions}
 \\geometry{a4paper,left=25mm,right=25mm,top=20mm,bottom=20mm,includeheadfoot,headheight=${headerLayout && h ? '\\authoredHeadHeight' : '28pt'},headsep=12pt,footskip=${footerLayout && f ? '\\authoredFootSkip' : '24pt'}}
 \\pagestyle{fancy}\\fancyhf{}
-\\fancyhead[L]{{${styleFor(header)}${headerLayout && h ? '\\authoredHeader' : h}}}
-\\fancyfoot[L]{{${styleFor(footer)}${footerLayout && f ? '\\authoredFooter' : f}}}
+\\fancyhead[L]{{${styleFor(header)} ${headerLayout && h ? '\\authoredHeader' : h}}}
+\\fancyfoot[L]{{${styleFor(footer)} ${footerLayout && f ? '\\authoredFooter' : f}}}
 \\fancyfoot[R]{${footerLayout && f ? '' : pageNumber}}
 \\renewcommand{\\headrulewidth}{${h?'0.3':'0'}pt}
 \\renewcommand{\\footrulewidth}{${f?'0.3':'0'}pt}
@@ -287,7 +290,7 @@ ${(settings.students??[]).map(s=>`${escapeLatexText(s.name)}\\quad ${escapeLatex
     renderComponent(slot,v) {
       if (/^heading-[1-4]$/.test(slot)) {
         const level=Number(slot.slice(-1));const n=nodes.find(n=>n.widget==='heading'&&Number(n.properties.level??2)===level);
-        return `\\${['section','subsection','subsubsection','subsubsubsection'][level-1]}{{${styleFor(n)}${v.title}}}\n`;
+        return `\\${['section','subsection','subsubsection','subsubsubsection'][level-1]}{{${styleFor(n)} ${v.title}}}\n`;
       }
       if (slot==='figure') return `\\begin{figure}[${v.placement}]\\centering\\includegraphics[width=${v.width}\\textwidth]{${v.path}}\\caption{${v.caption}}${v.label}\\end{figure}\n`;
       if (slot==='table') return `\\begin{table}[${v.placement}]\\centering\n${v.body}\n\\caption{${v.caption}}${v.label}\\end{table}\n`;
@@ -298,5 +301,5 @@ ${(settings.students??[]).map(s=>`${escapeLatexText(s.name)}\\quad ${escapeLatex
       return '';
     },
   };
-  return {theme,snapshot,layout,rootSectionLayouts,coverLayout,headerLayout,footerLayout,errors:[]};
+  return {theme,snapshot,resolvedScene:scene,layout,rootSectionLayouts,coverLayout,headerLayout,footerLayout,errors:[]};
 }

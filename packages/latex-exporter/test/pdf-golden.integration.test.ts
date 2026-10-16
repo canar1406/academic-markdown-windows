@@ -130,13 +130,56 @@ describe.runIf(enabled)('HCMUT compiled PDF golden', () => {
     }
   }, 120_000);
 
-  it('compiles an explicit break after a cover as one empty A4 sheet', () => {
+  it('does not invent a blank A4 sheet at the boundary after a cover', () => {
     const tools = resolveTools();
     const workspace = mkdtempSync(join(tmpdir(), 'hcmut-cover-blank-page-'));
     try {
       copyLogo(workspace);
       const exported = exportMarkdownToLatex([
         ':::cover',
+        ':::',
+        '',
+        ':::pagebreak',
+        ':::',
+        '',
+        ':::cover',
+        ':::',
+        '',
+      ].join('\n'), hcmutReportTheme);
+      expect(exported.diagnostics).toEqual([]);
+      const texPath = join(workspace, 'report.tex');
+      writeFileSync(texPath, exported.latex, 'utf8');
+
+      const compiled = compilePdf(tools.tectonic, workspace, texPath);
+      expect(compiled.status, compiled.log).toBe(0);
+      expect(inspectPdf(tools.pdfinfo, join(workspace, 'report.pdf'))).toMatchObject({
+        pages: 2,
+        pageLabel: 'A4',
+      });
+      for (const pageNumber of [1, 2]) {
+        expect(countDarkPixelsInRegion(renderPage(tools.pdftoppm, workspace, pageNumber), {
+          left: 0,
+          top: 0,
+          right: 1,
+          bottom: 1,
+          channelThreshold: 245,
+        })).toBeGreaterThan(100);
+      }
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  }, 120_000);
+
+  it('compiles two consecutive breaks after a cover as one empty A4 sheet', () => {
+    const tools = resolveTools();
+    const workspace = mkdtempSync(join(tmpdir(), 'hcmut-cover-explicit-blank-'));
+    try {
+      copyLogo(workspace);
+      const exported = exportMarkdownToLatex([
+        ':::cover',
+        ':::',
+        '',
+        ':::pagebreak',
         ':::',
         '',
         ':::pagebreak',
@@ -205,12 +248,54 @@ describe.runIf(enabled)('HCMUT compiled PDF golden', () => {
       const compiled = compilePdf(tools.tectonic, workspace, texPath);
       expect(compiled.status, compiled.log).toBe(0);
       expect(inspectPdf(tools.pdfinfo, join(workspace, 'report.pdf'))).toMatchObject({
-        pages: 7,
+        pages: 5,
         pageLabel: 'A4',
       });
-      for (const pageNumber of [3, 5, 6]) {
+      // Each first break at a full-page boundary is a no-op. The consecutive
+      // second break after the middle cover consumes exactly one empty sheet.
+      for (const pageNumber of [4]) {
         const blankPage = renderPage(tools.pdftoppm, workspace, pageNumber);
         expect(countDarkPixelsInRegion(blankPage, {
+          left: 0,
+          top: 0,
+          right: 1,
+          bottom: 1,
+          channelThreshold: 245,
+        })).toBe(0);
+      }
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  }, 120_000);
+
+  it('preserves two explicit empty A4 sheets before the first content', () => {
+    const tools = resolveTools();
+    const workspace = mkdtempSync(join(tmpdir(), 'hcmut-leading-blank-pages-'));
+    try {
+      copyLogo(workspace);
+      const exported = exportMarkdownToLatex([
+        ':::pagebreak',
+        ':::',
+        '',
+        ':::pagebreak',
+        ':::',
+        '',
+        ':::cover',
+        ':::',
+        '',
+      ].join('\n'), hcmutReportTheme);
+      expect(exported.diagnostics).toEqual([]);
+      const texPath = join(workspace, 'report.tex');
+      writeFileSync(texPath, exported.latex, 'utf8');
+
+      const compiled = compilePdf(tools.tectonic, workspace, texPath);
+      expect(compiled.status, compiled.log).toBe(0);
+      expect(inspectPdf(tools.pdfinfo, join(workspace, 'report.pdf'))).toMatchObject({
+        pages: 3,
+        pageLabel: 'A4',
+      });
+      for (const pageNumber of [1, 2]) {
+        expect(countDarkPixelsInRegion(renderPage(tools.pdftoppm, workspace, pageNumber), {
           left: 0,
           top: 0,
           right: 1,

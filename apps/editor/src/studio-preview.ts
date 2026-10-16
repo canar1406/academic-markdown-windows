@@ -20,6 +20,7 @@ export interface StudioPreviewResult {
   /** Empty on rejection: callers must keep the preceding snapshot intact. */
   markdown: string;
   diagnostics: StudioPreviewDiagnostic[];
+  rootNodeId?: string;
 }
 
 type Attributes = Record<string, LmxAttributeValue>;
@@ -38,13 +39,13 @@ export function projectThemeSceneToMarkdown(input: unknown, title = 'Theme Studi
   }
   const compiled = compileAuthoredTheme({
     schemaVersion: 1, id: 'studio-preview', version: '1.0.0', name: title.trim() || 'Theme Studio sample', scene: input,
-  });
+  }, { lmx: { cover: { title } } });
   if (!compiled.snapshot || !compiled.theme) {
     return { markdown: '', diagnostics: compiled.errors.map(message => ({ message, severity: 'error' })) };
   }
-  const scene = compiled.snapshot.scene;
+  const scene = compiled.resolvedScene ?? compiled.snapshot.scene;
   const diagnostics: StudioPreviewDiagnostic[] = [{
-    message: 'Independent authored theme sample: A4 flow and supported literal content/typography only. Compiled PDF remains the layout authority.',
+    message: 'Independent authored theme sample: A4 flow, text metadata bindings and supported typography. Compiled PDF remains the layout authority.',
     severity: 'warning',
   }];
   const warn = (message: string): void => { diagnostics.push({ message, severity: 'warning' }); };
@@ -87,7 +88,7 @@ export function projectThemeSceneToMarkdown(input: unknown, title = 'Theme Studi
   const snapshotResult = result.updated
     ? replaceFrontMatterValue(result.source, ['lmx', 'authoredTheme'], compiled.snapshot)
     : result;
-  return { markdown: snapshotResult.updated ? snapshotResult.source : '', diagnostics: [...diagnostics, ...snapshotResult.diagnostics.map(({ message, severity }) => ({ message, severity }))] };
+  return { markdown: snapshotResult.updated ? snapshotResult.source : '', rootNodeId: scene.root.id, diagnostics: [...diagnostics, ...snapshotResult.diagnostics.map(({ message, severity }) => ({ message, severity }))] };
 }
 
 function resolveStyle(values: Record<string, unknown>, scene: ThemeSceneV2, warn: (message: string) => void): Attributes {

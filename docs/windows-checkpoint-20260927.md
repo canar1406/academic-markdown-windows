@@ -1,5 +1,11 @@
 # Windows checkpoint — 27/09/2026
 
+> Historical pre-cloud checkpoint. Superseded current status:
+> `/Users/Heavietnam/Desktop/markdown/CLAUDE_HANDOFF.md` (01/10/2026).
+> Private cloud upload was subsequently authorized and Windows build/PDF passed,
+> but native startup still crashes. Statements below about no upload/no full
+> Windows build describe the earlier checkpoint, not the current state.
+
 ## Kết luận
 
 Đã có **mã nguồn bản Windows thử nghiệm**, transport cho editor, pipeline

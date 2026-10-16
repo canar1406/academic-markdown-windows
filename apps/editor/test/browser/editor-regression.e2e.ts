@@ -668,6 +668,37 @@ test('wraps long header and footer text inside the A4 text area', async ({ page 
   expect(layout.footerOverflowWrap).toBe('anywhere');
 });
 
+test('reserves enough top space for a header tall enough to wrap two lines', async ({ page }) => {
+  await loadMarkdown(page, [
+    '---',
+    'lmx:',
+    '  header:',
+    '    institution: TRƯỜNG ĐẠI HỌC BÁCH KHOA - ĐẠI HỌC QUỐC GIA THÀNH PHỐ HỒ CHÍ MINH',
+    '    faculty: KHOA KHOA HỌC VÀ KỸ THUẬT MÁY TÍNH, BỘ MÔN HỆ THỐNG THÔNG TIN',
+    '---',
+    '',
+    '# Nội dung',
+    '',
+    'Đoạn văn đầu trang.',
+  ].join('\n'));
+
+  const layout = await page.evaluate(() => {
+    const header = document.querySelector<HTMLElement>('.visual-page-header');
+    const firstBlock = document.querySelector<HTMLElement>('#editor .mu-paragraph, #editor .mu-h1');
+    if (!header || !firstBlock) throw new Error('Page chrome fixture did not render');
+    return {
+      headerBottom: header.getBoundingClientRect().bottom,
+      headerLineCount: header.getBoundingClientRect().height
+        / Number.parseFloat(getComputedStyle(header).lineHeight || '1'),
+      firstBlockTop: firstBlock.getBoundingClientRect().top,
+    };
+  });
+
+  expect(layout.headerLineCount, 'fixture must actually force the header to wrap').toBeGreaterThan(1.5);
+  expect(layout.firstBlockTop, 'body content must start at or below the real header height, not a fixed constant')
+    .toBeGreaterThanOrEqual(layout.headerBottom);
+});
+
 test('renders the entire Visual editor as a stack of A4 paper pages', async ({ page }) => {
   const source = '# Trang đầu\n\nTrường Đại học Bách khoa\n\n:::cover\n:::\n\n# Trang sau\n\nNội dung sau.';
   await page.evaluate((markdown) => window.markdownEditor?.loadMarkdown(markdown), source);

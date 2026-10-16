@@ -10,6 +10,18 @@ const geometry = {
 };
 
 describe('Source pagination without decorated-height feedback', () => {
+  it('keeps a layout-pixel safety inset after a gap despite transformed viewport rounding', () => {
+    const layout = calculateSourcePageLayout(5000, geometry);
+    const slot = geometry.pageHeight + geometry.pageGap;
+    let previousLine = 1;
+    let top = geometry.paddingTop;
+    for (const gap of layout.breaks) {
+      top += (gap.lineNumber - previousLine) * geometry.lineHeight + gap.height;
+      expect(top % slot).toBeGreaterThanOrEqual(1);
+      previousLine = gap.lineNumber;
+    }
+  });
+
   it('uses whole A4 sheets and counts each inserted gap only once', () => {
     const layout = calculateSourcePageLayout(1431, geometry);
     const contentHeight = 1431 * geometry.lineHeight + geometry.paddingTop
@@ -46,7 +58,7 @@ describe('Source pagination without decorated-height feedback', () => {
     const layout = calculateSourcePageLayout(4, {
       pageHeight: 60, pageGap: 24, lineHeight: 20, paddingTop: 0, paddingBottom: 0,
     });
-    expect(layout.breaks).toEqual([{ lineNumber: 4, height: 24 }]);
+    expect(layout.breaks).toEqual([{ lineNumber: 4, height: 25 }]);
     expect(layout.stackHeight).toBe(144);
   });
 });

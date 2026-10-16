@@ -17,6 +17,12 @@
 > SwiftUI, shared TypeScript, sandboxed TeX and compiled-PDF layout authority
 > remain unchanged. Stabilize the reported editor issues before Studio expansion.
 
+> 2026-10-16 implementation: editor/IO/bridge regressions, portable Studio text
+> bindings, shared original academic starters and a real compiled-PDF Studio mode
+> are recorded in `docs/adr/011-studio-compiled-preview-and-text-bindings.md`,
+> `docs/studio-research-20261016.md` and `docs/studio-qc-20261016.md`.
+> This is not full builder parity or a verified Windows release.
+
 ---
 
 ## 0. Executive decision

@@ -1229,3 +1229,5 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 export { compileAuthoredTheme, type AuthoredThemeSnapshot, type AuthoredThemeCompilation, type AuthoredLayout } from './authored-theme.js';
+export { authoredBindingKeys, type AuthoredBindingKey } from './authored-bindings.js';
+export { createStudioStarterThemes } from './studio-starters.js';

@@ -293,7 +293,10 @@ export function calculateSourcePageLayout(
     const pageOffset = ((top % slotHeight) + slotHeight) % slotHeight;
     const fittingRows = Math.floor((pageHeight - pageOffset + 0.000001) / lineHeight);
     if (fittingRows <= 0 && lineNumber > 1 && lineHeight < pageHeight) {
-      const height = Math.ceil(slotHeight - pageOffset);
+      // Virtualized rows and zoomed screen coordinates round independently.
+      // Leave one layout pixel inside the next sheet so subpixel error cannot
+      // put the first source line (or its gutter) back into the preceding gap.
+      const height = Math.ceil(slotHeight - pageOffset) + 1;
       breaks.push({ lineNumber, height });
       top += height;
     } else {

@@ -10,7 +10,7 @@ Successful build artifacts contain a full portable ZIP, not a single standalone 
 
 ## Status and rights
 
-WinUI and Windows runtime acceptance are pending the first Windows run. Theme Studio native authoring is not ported. Preserve all notices; HCMUT/logo distribution and TeX/native dependency license/provenance review remain gates before any public release.
+The October 2, 2026 workflow passed build, the real offline PDF smoke and native editor startup. The October 17 editor/theme update must pass a fresh workflow before delivery; an old successful artifact is not acceptance of new source. Full manual Windows interaction/IME acceptance remains separate. Theme Studio native authoring is not ported. Preserve all notices; HCMUT/logo distribution and TeX/native dependency license/provenance review remain gates before any public release.
 
 This snapshot was prepared with user authorization for a private repository and Windows CI. No secrets were detected by the bounded pre-upload pattern scan; this is not a full security or license audit.
 

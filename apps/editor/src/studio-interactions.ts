@@ -11,7 +11,7 @@ export function installStudioInteractions(root: HTMLElement, send: (drop: Studio
     const kind=element.dataset.authoredWidget;
     const container=['page','section','row','column','stack','body','cover','header','footer'].includes(kind??'');
     const position=(e.clientY-rect.top)/Math.max(1,rect.height);
-    const placement=container&&position>.2&&position<.8?'inside':position<.5?'before':'after';
+    const placement=element===root?'inside':container&&position>.2&&position<.8?'inside':position<.5?'before':'after';
     return {element,placement} as const;
   };
   const over=(e:DragEvent)=>{

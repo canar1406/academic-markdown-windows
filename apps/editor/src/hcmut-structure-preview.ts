@@ -8,8 +8,8 @@ export function readVisualPageDecorationSettings(markdown: string): VisualPageDe
   const data = parseFrontMatter(markdown).data;
   const lmx = record(data.lmx);
   if (lmx.authoredTheme !== undefined) {
-    const compiled = compileAuthoredTheme(lmx.authoredTheme);
-    const settings = readAuthoredPageDecorations(data, compiled.snapshot?.scene);
+    const compiled = compileAuthoredTheme(lmx.authoredTheme, data);
+    const settings = readAuthoredPageDecorations(data, compiled.resolvedScene);
     if (compiled.headerLayout) settings.header.renderContent = () => renderAuthoredLayoutPreview(compiled.headerLayout!);
     if (compiled.footerLayout) settings.footer.renderContent = () => renderAuthoredLayoutPreview(compiled.footerLayout!);
     return settings;
@@ -99,9 +99,10 @@ function renderHcmutStructurePreview(
     return;
   }
   const markdown = getMarkdown();
-  const lmx = record(parseFrontMatter(markdown).data.lmx);
+  const data = parseFrontMatter(markdown).data;
+  const lmx = record(data.lmx);
   if (lmx.authoredTheme !== undefined) {
-    const compiled = compileAuthoredTheme(lmx.authoredTheme);
+    const compiled = compileAuthoredTheme(lmx.authoredTheme, data);
     if (!compiled.snapshot) {
       container.dataset.structureEnabled = 'false';
       container.classList.remove('visual-page-preview');
@@ -123,7 +124,8 @@ function renderHcmutStructurePreview(
       container.append(renderAuthoredLayoutPreview(layout));
       return;
     }
-    const settings = readAuthoredPageDecorations(parseFrontMatter(markdown).data, compiled.snapshot.scene);
+    const scene = compiled.resolvedScene ?? compiled.snapshot.scene;
+    const settings = readAuthoredPageDecorations(data, scene);
     if (!isStructureEnabled(name, settings)) {
       container.dataset.structureEnabled = 'false';
       container.classList.remove('visual-page-preview');
@@ -134,7 +136,7 @@ function renderHcmutStructurePreview(
     container.dataset.structureEnabled = 'true';
     container.classList.remove('visual-structure-disabled');
     container.classList.add('visual-page-preview');
-    if (name === 'cover') renderAuthoredCoverPreview(container, markdown, compiled.snapshot.scene, compiled.coverLayout);
+    if (name === 'cover') renderAuthoredCoverPreview(container, markdown, scene, compiled.coverLayout);
     else renderGeneratedListPreview(container, name, markdown);
     return;
   }
@@ -164,7 +166,8 @@ function showAuthoredLayoutError(container: HTMLElement, message: string): void 
 /** Render page-region trees using exactly the same layout as section/cover.
  * Returns false for a leaf/absent region, leaving the existing text renderer in charge. */
 export function renderAuthoredPageRegion(container: HTMLElement, markdown: string, region: 'header' | 'footer'): boolean {
-  const compiled = compileAuthoredTheme(record(parseFrontMatter(markdown).data.lmx).authoredTheme);
+  const data = parseFrontMatter(markdown).data;
+  const compiled = compileAuthoredTheme(record(data.lmx).authoredTheme, data);
   const layout = region === 'header' ? compiled.headerLayout : compiled.footerLayout;
   if (!layout || layout.node.properties.enabled === false) return false;
   container.replaceChildren(renderAuthoredLayoutPreview(layout));
@@ -182,7 +185,8 @@ function authoredStyle(scene: ThemeSceneV2, target?: ThemeSceneNode): Record<str
   const visit = (node: ThemeSceneNode, inherited: Record<string, string | number>): Record<string, string | number> | undefined => {
     const style = { ...inherited };
     delete style.background;
-    for (const [key, raw] of Object.entries(node.style)) {
+    for (const key of Object.keys(node.style).sort()) {
+      const raw = node.style[key];
       const value = typeof raw === 'object' && raw !== null && 'token' in raw
         ? scene.tokens[String(raw.token)]?.value : raw;
       if (typeof value === 'string' || typeof value === 'number') style[key === 'accent' ? 'color' : key] = value;

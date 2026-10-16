@@ -385,6 +385,7 @@ export function installVisualPageFlow(
   let animationFrame: number | null = null;
   let scheduleGeneration = 0;
   let microtaskPending = false;
+  let composing = false;
   let disposed = false;
   let inventoryFingerprint = '';
   const scrollContainer = editor.closest<HTMLElement>('.editor-stage');
@@ -423,6 +424,9 @@ export function installVisualPageFlow(
     if (disposed) return;
     animationFrame = null;
     microtaskPending = false;
+    // Reflow moves the active contenteditable and the IME candidate window.
+    // Defer even already-queued layout work until Muya commits composition.
+    if (composing) return;
     const style = getComputedStyle(editor);
     const width = editor.offsetWidth;
     const pageHeight = width * A4_HEIGHT_TO_WIDTH;
@@ -464,7 +468,7 @@ export function installVisualPageFlow(
   };
 
   const schedule = (): void => {
-    if (microtaskPending) return;
+    if (disposed || composing || microtaskPending) return;
     const generation = ++scheduleGeneration;
     if (animationFrame !== null) cancelAnimationFrame(animationFrame);
     animationFrame = requestAnimationFrame(() => {
@@ -476,6 +480,25 @@ export function installVisualPageFlow(
   const handleEditorInput = (): void => {
     captureScrollPosition();
     schedule();
+  };
+
+  const startComposition = (): void => {
+    composing = true;
+    ++scheduleGeneration;
+    if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+    animationFrame = null;
+  };
+
+  const finishComposition = (): void => {
+    if (!composing) return;
+    composing = false;
+    schedule();
+  };
+
+  const handleFocusOut = (event: FocusEvent): void => {
+    if (!(event.relatedTarget instanceof Node) || !editor.contains(event.relatedTarget)) {
+      finishComposition();
+    }
   };
 
   const flush = (): void => {
@@ -532,6 +555,9 @@ export function installVisualPageFlow(
   window.addEventListener('resize', schedule);
   scrollContainer?.addEventListener('scroll', cancelPendingScrollRestore, { passive: true });
   editor.addEventListener('input', handleEditorInput, true);
+  editor.addEventListener('compositionstart', startComposition, true);
+  editor.addEventListener('compositionend', finishComposition, true);
+  editor.addEventListener('focusout', handleFocusOut);
   editor.addEventListener(VISUAL_PAGE_TRANSACTION_START, handlePageTransactionStart);
   editor.addEventListener('visual-metadata-visibility-changed', flush);
   editor.addEventListener('visual-page-selection-changed', updateSelection);
@@ -546,6 +572,9 @@ export function installVisualPageFlow(
     window.removeEventListener('resize', schedule);
     scrollContainer?.removeEventListener('scroll', cancelPendingScrollRestore);
     editor.removeEventListener('input', handleEditorInput, true);
+    editor.removeEventListener('compositionstart', startComposition, true);
+    editor.removeEventListener('compositionend', finishComposition, true);
+    editor.removeEventListener('focusout', handleFocusOut);
     editor.removeEventListener(VISUAL_PAGE_TRANSACTION_START, handlePageTransactionStart);
     editor.removeEventListener('visual-metadata-visibility-changed', flush);
     editor.removeEventListener('visual-page-selection-changed', updateSelection);

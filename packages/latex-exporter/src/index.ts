@@ -94,7 +94,7 @@ export function exportMarkdownToLatex(
 
   const lmxMetadata = recordValue(frontMatter.data.lmx);
   const authored = lmxMetadata.authoredTheme !== undefined
-    ? compileAuthoredTheme(lmxMetadata.authoredTheme)
+    ? compileAuthoredTheme(lmxMetadata.authoredTheme, frontMatter.data)
     : undefined;
   if (authored && !authored.theme) {
     diagnostics.push(...authored.errors.map(message => ({

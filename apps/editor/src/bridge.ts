@@ -6,6 +6,7 @@ export { postToHost } from './host-transport';
 import { projectThemeSceneToMarkdown } from './studio-preview';
 import { applyAuthoredThemeToMarkdown } from './authored-theme-application';
 import { installStudioInteractions } from './studio-interactions';
+import { createStudioStarterThemes } from '@markdown/theme-engine';
 import {
   createDocumentIndex,
   hasQuickStyleOverride,
@@ -346,6 +347,11 @@ export function installBridge(editor: {
         case 'export.requestLatex':
           window.markdownEditor?.requestLatex(envelope.requestId ?? '');
           break;
+        case 'studio.requestStarters':
+          postToHost(createEnvelope('studio.starterThemes', envelope.requestId, {
+            themes: createStudioStarterThemes(),
+          }));
+          break;
         case 'studio.previewScene': {
           const scene = envelope.payload.scene;
           const title = typeof envelope.payload.title === 'string'
@@ -371,6 +377,10 @@ export function installBridge(editor: {
             // A scene is a native snapshot, not a user edit. loadMarkdown
             // deliberately resets the JS revision to zero for each snapshot.
             window.markdownEditor?.loadMarkdown(result.markdown);
+            if (editor.visualContainer && result.rootNodeId) {
+              editor.visualContainer.dataset.authoredNodeId = result.rootNodeId;
+              editor.visualContainer.dataset.authoredWidget = 'page';
+            }
             if (editor.visualContainer) applyStudioReadOnly(editor.visualContainer);
             markStudioSelection();
             editor.visualContainer?.querySelectorAll<HTMLElement>('[data-authored-node-id]').forEach(node => {

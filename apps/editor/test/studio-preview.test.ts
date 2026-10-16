@@ -33,6 +33,37 @@ function scene(children: ThemeSceneNode[]): ThemeSceneV2 {
 afterEach(() => { delete window.markdownEditor; delete window.webkit; });
 
 describe('bounded Theme Studio preview projection', () => {
+  it('accepts a palette drop on a completely blank A4 canvas', () => {
+    const host = document.createElement('section');
+    document.body.append(host);
+    const messages: BridgeEnvelope[] = [];
+    window.webkit = { messageHandlers: { bridge: { postMessage: value => messages.push(value) } } };
+    let markdown = '';
+    installBridge({
+      setContent: value => { markdown = value; },
+      getMarkdown: () => markdown,
+      on: () => {},
+      visualContainer: host,
+    });
+    try {
+      window.markdownEditor?.handleEnvelope(createEnvelope('studio.previewScene', 'blank', { scene: scene([]) }));
+      expect(host.dataset.authoredNodeId).toBe('page');
+      const transfer = new DataTransfer();
+      transfer.setData('text/plain', 'studio-widget:section');
+      const over = new DragEvent('dragover', { bubbles: true, dataTransfer: transfer });
+      const drop = new DragEvent('drop', { bubbles: true, dataTransfer: transfer });
+      // happy-dom's DragEvent does not populate DataTransfer from its init object.
+      Object.defineProperty(over, 'dataTransfer', { value: transfer });
+      Object.defineProperty(drop, 'dataTransfer', { value: transfer });
+      host.dispatchEvent(over);
+      host.dispatchEvent(drop);
+      expect(messages.find(message => message.type === 'studio.dropNode')).toMatchObject({
+        requestId: 'blank',
+        payload: { value: 'studio-widget:section', nodeId: 'page', placement: 'inside' },
+      });
+    } finally { window.dispatchEvent(new Event('pagehide')); host.remove(); }
+  });
+
   it('exports a blank authored snapshot and a literal cover without HCMUT inheritance', () => {
     const blank = projectThemeSceneToMarkdown(scene([]), 'Independent');
     expect(blank.diagnostics.filter(item => item.severity === 'error')).toEqual([]);
