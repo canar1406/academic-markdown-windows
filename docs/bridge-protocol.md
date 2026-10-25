@@ -115,6 +115,26 @@ reject invalid supplied revisions and discard superseded results. Older v1
 responses without this field remain decodable; they use the conservative
 request-start revision guard and cannot be relabeled as newer source.
 
+## Page layout revisions and thumbnail feedback
+
+`editor.pageLayoutChanged` is an additive v1 event with the constant-size
+payload `{ "layoutRevision": 12 }`. It follows every committed Visual layout,
+including font/viewport/content reflows that leave the page inventory unchanged.
+It contains neither Markdown nor the full page inventory. Native code must
+advance its thumbnail revision guard on this event; otherwise valid rasters
+are rejected after an unchanged-inventory reflow and the navigator stays loading.
+Older hosts may ignore this event. It does not change document dirty revisions
+or infer semantic page breaks.
+
+`editor.pageThumbnailChanged` retains its existing current-layout check.
+`editor.pageThumbnailFailed` carries `layoutRevision`, `pageIndex`,
+`targetWidth` and `message`. The macOS host validates the revision, page and
+bounded image width, exposes a bounded error message and offers an explicit
+retry through the existing `editor.setPageNavigatorDemand` command. A failed
+refresh preserves the last successful raster; retry clears that page's error.
+Superseded failures are ignored. These are transient UI states, never saved
+into Markdown.
+
 ## Page action requests
 
 The Visual editor renders transient controls above each A4 page. These controls

@@ -411,7 +411,7 @@ body {
   box-sizing: border-box;
   align-items: center;
   justify-content: space-between;
-  padding: 2px 8px;
+  padding: 2px var(--visual-action-strip-right-inset, 8px) 2px 8px;
   color: #67625b;
   font-family: 'Avenir Next', Avenir, sans-serif;
   font-size: 10px;
@@ -644,7 +644,8 @@ body {
   padding-right: 0;
   padding-left: 0;
   counter-reset: hcmut-theorem hcmut-property hcmut-proposition hcmut-exercise
-    hcmut-figure hcmut-table hcmut-listing;
+    hcmut-figure hcmut-table hcmut-listing hcmut-equation hcmut-definition
+    hcmut-remark hcmut-algorithm;
 }
 
 #editor .mu-atx-heading {
@@ -1440,6 +1441,9 @@ body {
 
 .mu-lmx-directive:is(
   [data-lmx-name='theorem'],
+  [data-lmx-name='definition'],
+  [data-lmx-name='remark'],
+  [data-lmx-name='proof'],
   [data-lmx-name='property'],
   [data-lmx-name='proposition'],
   [data-lmx-name='corollary'],
@@ -1447,9 +1451,367 @@ body {
   [data-lmx-name='exercise']
 ) .mu-lmx-label { display: none; }
 
+/* References / Bibliography visual preview */
+.mu-lmx-directive[data-lmx-name='references'] {
+  margin: 1.5em 0;
+  padding: 14px 16px;
+  border: 1px solid #d8d3c8;
+  border-radius: 6px;
+  background: #faf9f5;
+  color: #1b1b1b;
+  font-family: 'Times New Roman', 'Iowan Old Style', serif;
+  cursor: pointer;
+}
+
+.mu-lmx-references-preview .hcmut-references-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #dcd7cc;
+}
+
+.mu-lmx-references-preview .hcmut-generated-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1b1b1b;
+}
+
+.mu-lmx-references-preview .hcmut-references-style-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e6ecf5;
+  color: #1e4b8f;
+  font: 600 11px/1.4 'Avenir Next', Avenir, sans-serif;
+}
+
+.mu-lmx-references-preview .hcmut-references-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mu-lmx-references-preview .hcmut-reference-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13.3333px;
+  line-height: 1.45;
+}
+
+.mu-lmx-references-preview .hcmut-reference-index {
+  flex-shrink: 0;
+  min-width: 28px;
+  font-weight: 600;
+}
+
+.mu-lmx-references-preview .hcmut-reference-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.mu-lmx-references-preview .hcmut-reference-body.apa-hanging {
+  padding-left: 1.8em;
+  text-indent: -1.8em;
+}
+
+.mu-lmx-references-preview .hcmut-reference-key {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #eeeae0;
+  color: #555;
+  font: 500 11px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Numbered Equation block */
+.mu-lmx-directive[data-lmx-name='equation'] {
+  counter-increment: hcmut-equation;
+  position: relative;
+  margin: 1em 0;
+  padding: 0.4em 3.2em 0.4em 0;
+  border: 0;
+  background: transparent;
+  color: #1b1b1b;
+}
+
+.mu-lmx-directive[data-lmx-name='equation'] > .mu-lmx-header {
+  display: none;
+}
+
+.mu-lmx-directive[data-lmx-name='equation']::after {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  font-family: 'Times New Roman', serif;
+  font-size: 13.3333px;
+  font-style: normal;
+  content: '(' counter(hcmut-equation) ')';
+}
+
+/* Definition, Remark, and Proof blocks */
+.mu-lmx-directive:is(
+  [data-lmx-name='definition'],
+  [data-lmx-name='remark'],
+  [data-lmx-name='proof']
+) {
+  position: relative;
+  margin: 1.1em 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #1b1b1b;
+  font-family: 'Times New Roman', 'Iowan Old Style', serif;
+  font-style: normal;
+}
+
+.mu-lmx-directive[data-lmx-name='definition'] { counter-increment: hcmut-definition; }
+.mu-lmx-directive[data-lmx-name='remark'] { counter-increment: hcmut-remark; }
+
+.mu-lmx-directive:is(
+  [data-lmx-name='definition'],
+  [data-lmx-name='remark'],
+  [data-lmx-name='proof']
+) > .mu-lmx-header {
+  display: inline;
+  margin: 0 0.35em 0 0;
+  font-family: inherit;
+}
+
+.mu-lmx-directive[data-lmx-name='definition'] .mu-lmx-kind {
+  color: inherit;
+  font-size: 1em;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.mu-lmx-directive[data-lmx-name='definition'] .mu-lmx-header:not(:has(.mu-lmx-title)) .mu-lmx-kind::after {
+  content: ' ' counter(hcmut-definition) '.';
+}
+
+.mu-lmx-directive[data-lmx-name='definition'] .mu-lmx-kind::after {
+  content: ' ' counter(hcmut-definition);
+}
+
+.mu-lmx-directive[data-lmx-name='remark'] .mu-lmx-kind {
+  color: inherit;
+  font-size: 1em;
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.mu-lmx-directive[data-lmx-name='remark'] .mu-lmx-header:not(:has(.mu-lmx-title)) .mu-lmx-kind::after {
+  content: ' ' counter(hcmut-remark) '.';
+}
+
+.mu-lmx-directive[data-lmx-name='remark'] .mu-lmx-kind::after {
+  content: ' ' counter(hcmut-remark);
+}
+
+.mu-lmx-directive[data-lmx-name='proof'] .mu-lmx-kind {
+  color: inherit;
+  font-size: 1em;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.mu-lmx-directive[data-lmx-name='proof'] .mu-lmx-header:not(:has(.mu-lmx-title)) .mu-lmx-kind::after {
+  content: '.';
+}
+
+.mu-lmx-directive[data-lmx-name='proof']::after {
+  float: right;
+  margin-left: 0.5em;
+  font-style: normal;
+  content: '∎';
+}
+
+.mu-lmx-directive:is(
+  [data-lmx-name='definition'],
+  [data-lmx-name='remark'],
+  [data-lmx-name='proof']
+) .mu-lmx-title {
+  margin-left: 0.32em;
+  color: inherit;
+  font-family: inherit;
+  font-size: 1em;
+  font-weight: 400;
+}
+
+.mu-lmx-directive:is(
+  [data-lmx-name='definition'],
+  [data-lmx-name='remark'],
+  [data-lmx-name='proof']
+) .mu-lmx-title::before { content: '('; }
+
+.mu-lmx-directive:is(
+  [data-lmx-name='definition'],
+  [data-lmx-name='remark'],
+  [data-lmx-name='proof']
+) .mu-lmx-title::after { content: ').'; }
+
+.mu-lmx-directive:is(
+  [data-lmx-name='definition'],
+  [data-lmx-name='remark'],
+  [data-lmx-name='proof']
+) > .mu-paragraph:first-of-type,
+.mu-lmx-directive:is(
+  [data-lmx-name='definition'],
+  [data-lmx-name='remark'],
+  [data-lmx-name='proof']
+) > .mu-paragraph:first-of-type > .mu-content {
+  display: inline;
+}
+
+/* Algorithm block */
+.mu-lmx-directive[data-lmx-name='algorithm'] {
+  counter-increment: hcmut-algorithm;
+  display: flex;
+  flex-direction: column;
+  margin: 1.2em 0;
+  padding: 6px 0 8px;
+  border-top: 1.5px solid #1b1b1b;
+  border-bottom: 1.5px solid #1b1b1b;
+  border-left: 0;
+  border-right: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #1b1b1b;
+  font-family: 'Times New Roman', 'Iowan Old Style', serif;
+}
+
+.mu-lmx-directive[data-lmx-name='algorithm'] > .mu-lmx-header {
+  order: 0;
+  display: block;
+  margin: 0 0 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #1b1b1b;
+}
+
+.mu-lmx-directive[data-lmx-name='algorithm'] .mu-lmx-kind {
+  color: #1b1b1b;
+  font-size: 1em;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.mu-lmx-directive[data-lmx-name='algorithm'] .mu-lmx-kind::after {
+  content: ' ' counter(hcmut-algorithm);
+}
+
+.mu-lmx-directive[data-lmx-name='algorithm'] > .mu-lmx-caption {
+  order: 0;
+  margin: -2px 0 6px;
+  padding: 0 0 4px;
+  border-bottom: 1px solid #1b1b1b;
+  font-size: 1em;
+  font-style: normal;
+  text-align: left;
+}
+
+.mu-lmx-directive[data-lmx-name='algorithm']:has(> .mu-lmx-caption) > .mu-lmx-header {
+  display: none;
+}
+
+.mu-lmx-directive[data-lmx-name='algorithm'] > .mu-lmx-caption::before {
+  color: #1b1b1b;
+  font-weight: 700;
+  content: 'Thuật toán ' counter(hcmut-algorithm) ': ';
+}
+
+/* Appendix block */
+.mu-lmx-directive[data-lmx-name='appendix'] {
+  margin: 1.6em 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #1b1b1b;
+  font-family: 'Times New Roman', 'Iowan Old Style', serif;
+}
+
+.mu-lmx-directive[data-lmx-name='appendix'] > .mu-lmx-header {
+  display: block;
+  margin: 18px 0 10px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.mu-lmx-directive[data-lmx-name='appendix'] .mu-lmx-kind {
+  display: none;
+}
+
+.mu-lmx-directive[data-lmx-name='appendix']:not(:has(.mu-lmx-title)) .mu-lmx-kind {
+  display: inline;
+  color: inherit;
+  font-size: inherit;
+  text-transform: none;
+}
+
 /* Quick Edit is a visual-document override, not editor chrome. The Muya
    renderer exposes only validated custom properties and matching classes. */
-#editor .mu-lmx-directive.mu-lmx-quick-color {
+#editor .mu-lmx-directive.mu-lmx-quick-theme[data-lmx-theme='hcmut-report-v1'],
+#editor .mu-lmx-directive.mu-lmx-quick-theme[data-lmx-theme='hcmut-report-v1'] > :is(.mu-paragraph, .mu-atx-heading, .mu-setext-heading) {
+  font-family: 'Times New Roman', Georgia, serif;
+  font-size: 12pt;
+  line-height: 1.5;
+  text-align: justify;
+}
+
+#editor .mu-lmx-directive.mu-lmx-quick-theme[data-lmx-theme='ieee-paper'],
+#editor .mu-lmx-directive.mu-lmx-quick-theme[data-lmx-theme='ieee-paper'] > :is(.mu-paragraph, .mu-atx-heading, .mu-setext-heading) {
+  font-family: 'Times New Roman', Georgia, serif;
+  font-size: 10pt;
+  line-height: 1.15;
+  text-align: justify;
+}
+
+#editor .mu-lmx-directive.mu-lmx-quick-theme[data-lmx-theme='apa-manuscript'],
+#editor .mu-lmx-directive.mu-lmx-quick-theme[data-lmx-theme='apa-manuscript'] > :is(.mu-paragraph, .mu-atx-heading, .mu-setext-heading) {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 12pt;
+  line-height: 2;
+  text-align: left;
+}
+
+#editor .mu-lmx-directive.mu-lmx-quick-theme[data-lmx-theme='modern-lecture'],
+#editor .mu-lmx-directive.mu-lmx-quick-theme[data-lmx-theme='modern-lecture'] > :is(.mu-paragraph, .mu-atx-heading, .mu-setext-heading) {
+  font-family: 'Avenir Next', Avenir, sans-serif;
+  font-size: 11.5pt;
+  line-height: 1.65;
+  letter-spacing: 0.1pt;
+}
+
+#editor .mu-lmx-directive.mu-lmx-quick-theme[data-lmx-theme='academic-callout'] {
+  background-color: #f0f5ff;
+  border: 1.5pt solid #1e4b8f;
+  border-radius: 6pt;
+  padding: 4mm;
+  box-sizing: border-box;
+  color: #143466;
+}
+
+#editor .mu-lmx-directive.mu-lmx-quick-theme[data-lmx-theme='formal-frame'] {
+  background-color: #fbf8f1;
+  border: 1pt solid #8c7355;
+  border-radius: 4pt;
+  padding: 4mm;
+  box-sizing: border-box;
+  color: #2b2118;
+}
+
+#editor .mu-lmx-directive.mu-lmx-quick-color,
+#editor .mu-lmx-directive.mu-lmx-quick-color > :is(.mu-paragraph, .mu-atx-heading, .mu-setext-heading) {
   color: var(--mu-lmx-color);
 }
 
@@ -1457,32 +1819,38 @@ body {
   background-color: var(--mu-lmx-background);
 }
 
-#editor .mu-lmx-directive.mu-lmx-quick-font-family {
+#editor .mu-lmx-directive.mu-lmx-quick-font-family,
+#editor .mu-lmx-directive.mu-lmx-quick-font-family > :is(.mu-paragraph, .mu-atx-heading, .mu-setext-heading) {
   font-family: var(--mu-lmx-font-family);
 }
 
 #editor .mu-lmx-directive.mu-lmx-quick-font-size,
-#editor .mu-lmx-directive.mu-lmx-quick-font-size > .mu-paragraph {
+#editor .mu-lmx-directive.mu-lmx-quick-font-size > :is(.mu-paragraph, .mu-atx-heading, .mu-setext-heading) {
   font-size: var(--mu-lmx-font-size);
 }
 
-#editor .mu-lmx-directive.mu-lmx-quick-font-weight {
+#editor .mu-lmx-directive.mu-lmx-quick-font-weight,
+#editor .mu-lmx-directive.mu-lmx-quick-font-weight > :is(.mu-paragraph, .mu-atx-heading, .mu-setext-heading) {
   font-weight: var(--mu-lmx-font-weight);
 }
 
-#editor .mu-lmx-directive.mu-lmx-quick-font-style {
+#editor .mu-lmx-directive.mu-lmx-quick-font-style,
+#editor .mu-lmx-directive.mu-lmx-quick-font-style > :is(.mu-paragraph, .mu-atx-heading, .mu-setext-heading) {
   font-style: var(--mu-lmx-font-style);
 }
 
-#editor .mu-lmx-directive.mu-lmx-quick-line-height {
+#editor .mu-lmx-directive.mu-lmx-quick-line-height,
+#editor .mu-lmx-directive.mu-lmx-quick-line-height > :is(.mu-paragraph, .mu-atx-heading, .mu-setext-heading) {
   line-height: var(--mu-lmx-line-height);
 }
 
-#editor .mu-lmx-directive.mu-lmx-quick-letter-spacing {
+#editor .mu-lmx-directive.mu-lmx-quick-letter-spacing,
+#editor .mu-lmx-directive.mu-lmx-quick-letter-spacing > :is(.mu-paragraph, .mu-atx-heading, .mu-setext-heading) {
   letter-spacing: var(--mu-lmx-letter-spacing);
 }
 
-#editor .mu-lmx-directive.mu-lmx-quick-align {
+#editor .mu-lmx-directive.mu-lmx-quick-align,
+#editor .mu-lmx-directive.mu-lmx-quick-align > :is(.mu-paragraph, .mu-atx-heading, .mu-setext-heading) {
   text-align: var(--mu-lmx-align);
 }
 

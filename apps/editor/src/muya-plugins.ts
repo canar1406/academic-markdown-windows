@@ -84,6 +84,10 @@ export class AcademicQuickInsertMenu extends ParagraphQuickInsertMenu {
         { name: 'academic blocks', children: academicItems },
       ].filter((section) => section.children.length > 0);
       this.render();
+      if (this.activeItem) {
+        const activeEle = this.getItemElement(this.activeItem);
+        this.activeEleScrollIntoView(activeEle);
+      }
     }
   }
 

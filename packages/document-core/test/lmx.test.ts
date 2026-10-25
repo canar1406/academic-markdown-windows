@@ -103,9 +103,10 @@ describe('LMX v1 directives', () => {
   it('registers the complete directive set, including the authored layout marker', () => {
     expect(listLmxDefinitions().map((item) => item.name)).toEqual([
       'theme-layout',
-      'cover', 'toc', 'list-of-figures', 'list-of-tables', 'pagebreak', 'theorem',
+      'cover', 'toc', 'list-of-figures', 'list-of-tables', 'references', 'pagebreak',
+      'theorem', 'definition', 'proof', 'remark',
       'property', 'proposition', 'corollary', 'lemma', 'exercise', 'figure',
-      'table', 'listing', 'front-section', 'style',
+      'table', 'equation', 'algorithm', 'listing', 'front-section', 'appendix', 'style',
     ]);
     expect(getLmxDefinition('theme-layout')?.template).toBe(':::theme-layout {node="section-id"}\n:::\n');
     expect(getLmxDefinition('figure')?.template).toContain(':::figure {#fig-label');
@@ -115,9 +116,11 @@ describe('LMX v1 directives', () => {
     const commands = listLmxInsertCommands();
 
     expect(commands.map((command) => command.id)).toEqual([
-      'cover', 'toc', 'list-of-figures', 'list-of-tables', 'figure', 'table',
-      'listing', 'theorem', 'property', 'proposition', 'corollary', 'lemma',
-      'exercise', 'pagebreak', 'acknowledgements', 'declaration', 'abstract',
+      'cover', 'toc', 'list-of-figures', 'list-of-tables', 'references',
+      'figure', 'table', 'equation', 'algorithm', 'listing',
+      'theorem', 'definition', 'proof', 'remark',
+      'property', 'proposition', 'corollary', 'lemma',
+      'exercise', 'pagebreak', 'acknowledgements', 'declaration', 'abstract', 'appendix',
     ]);
     expect(commands.find((command) => command.id === 'acknowledgements')?.template)
       .toContain('kind="acknowledgements"');

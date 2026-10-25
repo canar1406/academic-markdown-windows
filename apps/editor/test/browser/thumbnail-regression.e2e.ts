@@ -197,6 +197,69 @@ test('native bridge forwards thumbnail demand to the renderer', async ({ page })
   for (const index of [0, 1, 13]) await waitForRaster(page, index);
 });
 
+test('a finished raster batch releases its slot even when animation frames are suspended', async ({ page }) => {
+  await loadAndGetPageCount(page, '# Thumbnail\n\nNội dung tiếng Việt.\n', 1);
+  await page.evaluate(() => {
+    document.querySelector('#editor')?.addEventListener('visual-page-thumbnail-changed', () => {
+      // Native WebKit may suspend animation frames for occluded/background views.
+      // Pause only after the first raster, so real page layout is already complete.
+      window.requestAnimationFrame = () => 0;
+    }, { once: true });
+  });
+  await demandPages(page, [0], 'bridge');
+  await waitForRaster(page, 0);
+  await page.evaluate(() => { window.__thumbnailProbe.messages = []; });
+  await demandPages(page, [0], 'bridge');
+  await waitForRaster(page, 0);
+});
+
+test('a layout-only commit during rasterization reschedules the current page', async ({ page }) => {
+  await loadAndGetPageCount(page, '# Trang hiện tại\n\nNội dung tiếng Việt.\n', 1);
+  await page.evaluate(() => {
+    const descriptor = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
+    if (!descriptor?.set) throw new Error('Missing image source setter');
+    let invalidated = false;
+    Object.defineProperty(HTMLImageElement.prototype, 'src', {
+      configurable: true,
+      get: descriptor.get,
+      set(this: HTMLImageElement, value: string) {
+        if (!invalidated && value.startsWith('data:image/svg+xml')) {
+          invalidated = true;
+          // Font/viewport reflows can commit the same page inventory while a
+          // previous asynchronous raster is decoding.
+          document.querySelector('#editor')?.dispatchEvent(new CustomEvent('visual-page-layout-committed', {
+            detail: [{ pageIndex: 0 }],
+          }));
+        }
+        descriptor.set?.call(this, value);
+      },
+    });
+  });
+  await demandPages(page, [0], 'bridge');
+  await waitForRaster(page, 0);
+});
+
+test('thumbnail work waits for Vietnamese composition even when zoom ends first', async ({ page }) => {
+  await loadAndGetPageCount(page, '# Soạn thảo\n\nĐang gõ tiếng Việt.\n', 1);
+  await page.evaluate(() => {
+    const editor = document.querySelector('#editor');
+    editor?.dispatchEvent(new CustomEvent('visual-page-navigator-demand-changed', {
+      detail: { pageIndices: [0], targetWidth: 240 },
+    }));
+    editor?.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+    editor?.dispatchEvent(new CustomEvent('visual-zoom-interaction-changed', { detail: { active: true } }));
+    editor?.dispatchEvent(new CustomEvent('visual-zoom-interaction-changed', { detail: { active: false } }));
+  });
+  // Longer than the renderer debounce: no cloned DOM or raster may interrupt composition.
+  await page.waitForTimeout(700);
+  expect(await page.evaluate(() => window.__thumbnailProbe.svgLengths)).toEqual([]);
+  expect(await page.evaluate(() => window.__thumbnailProbe.rawThumbnails)).toEqual([]);
+  await page.evaluate(() => document.querySelector('#editor')?.dispatchEvent(
+    new CompositionEvent('compositionend', { bubbles: true, data: 'tiếng Việt' }),
+  ));
+  await waitForRaster(page, 0);
+});
+
 test('editing the document refreshes an already-demanded thumbnail without a new demand signal', async ({ page }) => {
   await loadAndDemand(page, sourceFixture, 0.5, [0], 'renderer');
   await waitForRaster(page, 0);

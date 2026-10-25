@@ -256,4 +256,75 @@ describe('structure page flow', () => {
     });
   });
 
+  it('preserves page header and footer DOM nodes when block geometry and settings are unchanged', async () => {
+    const stage = document.createElement('div');
+    stage.className = 'editor-stage';
+    const editor = document.createElement('main');
+    editor.style.setProperty('--visual-page-gap', '10px');
+    editor.style.setProperty('--visual-page-content-top', '10px');
+    editor.style.setProperty('--visual-page-content-bottom', '10px');
+    Object.defineProperty(editor, 'offsetWidth', { configurable: true, value: 210 });
+    const root = document.createElement('div');
+    root.className = 'mu-container';
+    const paragraph = document.createElement('p');
+    paragraph.textContent = 'Đoạn một';
+    Object.defineProperty(paragraph, 'getBoundingClientRect', {
+      value: () => ({ top: 10, bottom: 34, left: 0, right: 200, width: 200, height: 24 }),
+    });
+    root.append(paragraph);
+    editor.append(root);
+    stage.append(editor);
+    document.body.append(stage);
+
+    const settings = {
+      cover: {
+        heading: 'BÁO CÁO',
+        logoEnabled: true,
+        logoWidthCm: 4,
+        borderEnabled: true,
+        outerBorderWidthPt: 4,
+        innerBorderWidthPt: 1.5,
+      },
+      structure: { cover: true, toc: true, listOfFigures: true, listOfTables: true },
+      header: {
+        enabled: true,
+        institution: 'ĐHQG TP.HCM',
+        faculty: 'KHOA KH&KT MÁY TÍNH',
+        logoEnabled: true,
+        logoSizeMm: 10,
+        fontSizePt: 9,
+        bold: true,
+        ruleEnabled: true,
+        ruleWidthPt: 0.3,
+      },
+      footer: {
+        enabled: true,
+        left: 'Báo cáo',
+        pageNumber: 'current-total' as const,
+        fontSizePt: 8,
+        ruleEnabled: true,
+        ruleWidthPt: 0.3,
+      },
+    };
+    const dispose = installVisualPageFlow(editor, {
+      getPageDecorationSettings: () => settings,
+    });
+    try {
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+      const initialHeader = editor.querySelector('.visual-page-header');
+      const initialFooter = editor.querySelector('.visual-page-footer');
+      expect(initialHeader).not.toBeNull();
+      expect(initialFooter).not.toBeNull();
+
+      editor.dispatchEvent(new Event('input'));
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+
+      expect(editor.querySelector('.visual-page-header')).toBe(initialHeader);
+      expect(editor.querySelector('.visual-page-footer')).toBe(initialFooter);
+    } finally {
+      dispose();
+      stage.remove();
+    }
+  });
+
 });

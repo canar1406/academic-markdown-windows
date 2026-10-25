@@ -139,7 +139,7 @@ class CodeBlockContent extends Content {
             (this.outContainer?.attachments?.head as HTMLPreview).update(text);
     }
 
-    override update(_cursor: ICursor, highlights = []) {
+    override update(_cursor?: ICursor, highlights = []) {
         const { lang, text } = this;
         // transform alias to original language
         const fullLengthLang = transformAliasToOrigin([lang])[0];
@@ -190,7 +190,16 @@ class CodeBlockContent extends Content {
             return;
 
         const textContent = this.domNode!.textContent!;
-        const { start, end } = this.getCursor()!;
+        const currentCursor = this.getCursor();
+        if (!currentCursor) {
+            if (this.text !== textContent) {
+                this.text = textContent;
+                this.updatePreviewIfHave(textContent);
+                this.update();
+            }
+            return;
+        }
+        const { start, end } = currentCursor;
         const { needRender, text } = this.autoPair(
             event,
             textContent,

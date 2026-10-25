@@ -436,6 +436,9 @@ class Content extends TreeNode {
         if (!isKeyboardEvent(event))
             return;
 
+        if (this.isComposed || event.isComposing)
+            return;
+
         // TODO: move codes bellow to muya.ui ?
         if (
             this.muya.ui.shownFloat.size > 0

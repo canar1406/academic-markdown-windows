@@ -599,11 +599,30 @@ class Format extends Content {
         }
 
         const { domNode } = this;
-        const { start, end } = this.getCursor()!;
         const textContent = getTextContent(domNode!, [
             CLASS_NAMES.MU_MATH_RENDER,
             CLASS_NAMES.MU_RUBY_RENDER,
         ]);
+        const currentCursor = this.getCursor();
+        if (!currentCursor) {
+            if (this.text !== textContent) {
+                const needRender = this._checkNotSameToken(this.text, textContent);
+                this.text = textContent;
+                if (
+                    needRender
+                    || this.checkNeedRender({
+                        anchor: { offset: textContent.length },
+                        focus: { offset: textContent.length },
+                    })
+                ) {
+                    this.update();
+                }
+            }
+            if (this.blockName !== 'table.cell.content')
+                this._convertIfNeeded();
+            return;
+        }
+        const { start, end } = currentCursor;
         const isInInlineMath = !!this._checkCursorInTokenType(
             textContent,
             start.offset,

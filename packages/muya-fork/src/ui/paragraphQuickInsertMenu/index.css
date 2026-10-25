@@ -1,8 +1,9 @@
 .mu-quick-insert {
-    width: 230px;
-    max-height: 260px;
-    padding: 0 0 20px;
+    width: 300px;
+    max-height: 320px;
+    padding: 0 0 12px;
     overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .mu-quick-insert .title {
@@ -11,23 +12,27 @@
     z-index: 1001;
 
     display: flex;
-    padding: 10px 14px;
+    padding: 8px 14px;
 
     color: var(--editor-color);
-    font-weight: 500;
-    font-size: 13px;
+    font-weight: 600;
+    font-size: 11px;
     line-height: 120%;
-    letter-spacing: 1px;
+    letter-spacing: 0.8px;
     text-transform: uppercase;
 
     background: var(--float-bg-color);
+    border-bottom: 1px solid rgb(0 0 0 / 5%);
 }
 
 .mu-quick-insert .item {
     display: flex;
     flex-direction: row;
     align-items: center;
-    height: 34px;
+    box-sizing: border-box;
+    min-height: 34px;
+    height: auto;
+    padding: 4px 0;
 
     cursor: pointer;
 
@@ -37,10 +42,6 @@
 .mu-quick-insert .active,
 .mu-quick-insert div.item:hover {
     background-color: var(--float-hover-color);
-}
-
-.mu-quick-insert:hover .active {
-    background: transparent;
 }
 
 .mu-quick-insert .no-result {
@@ -91,24 +92,32 @@
 
 .mu-quick-insert .description {
     flex: 1;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .mu-quick-insert .short-cut {
     display: flex;
     flex-direction: row-reverse;
-    flex-shrink: 1;
+    flex-shrink: 0;
     align-items: center;
-    width: 70px;
-    margin-right: 20px;
+    width: auto;
+    margin-left: 8px;
+    margin-right: 14px;
+    white-space: nowrap;
 
     color: var(--editor-color-50);
-    font-size: 12px;
-    letter-spacing: 1px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0;
 }
 
 .mu-quick-insert .big-title {
+    overflow: hidden;
     color: var(--editor-color);
     font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .mu-quick-insert .hide {

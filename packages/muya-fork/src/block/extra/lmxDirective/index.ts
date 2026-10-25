@@ -16,6 +16,7 @@ const structuralNames = new Set([
     'toc',
     'list-of-figures',
     'list-of-tables',
+    'references',
     'pagebreak',
 ]);
 
@@ -25,10 +26,11 @@ const previewNames = new Set([
   'toc',
   'list-of-figures',
   'list-of-tables',
+  'references',
   'pagebreak',
 ]);
 
-const mediaNames = new Set(['figure', 'table', 'listing']);
+const mediaNames = new Set(['figure', 'table', 'listing', 'algorithm']);
 
 type QuickStyleAttributes = QuickStyleValidation['attributes'];
 type QuickStyleProperty = Exclude<keyof QuickStyleAttributes, 'component' | 'theme'>;
@@ -218,11 +220,13 @@ class LmxDirective extends Parent {
     private clearQuickStyle() {
         const classNames = new Set([
             'mu-lmx-quick-style',
+            'mu-lmx-quick-theme',
             'mu-lmx-quick-border',
             ...Object.values(quickStyleClassNames),
         ]);
         this.classList = this.classList.filter(className => !classNames.has(className));
         this.domNode!.classList.remove(...classNames);
+        delete this.domNode!.dataset.lmxTheme;
         for (const variableName of Object.values(quickStyleVariableNames))
             this.domNode!.style.removeProperty(variableName);
     }
@@ -232,11 +236,18 @@ class LmxDirective extends Parent {
         if (!validation.valid)
             return;
         const attributes = validation.attributes;
+        const theme = typeof attributes.theme === 'string' && attributes.theme.trim().length > 0
+            ? attributes.theme.trim()
+            : undefined;
         const presentProperties = quickStyleProperties.filter(property => attributes[property] !== undefined);
-        if (presentProperties.length === 0)
+        if (presentProperties.length === 0 && theme === undefined)
             return;
 
         this.addQuickStyleClass('mu-lmx-quick-style');
+        if (theme !== undefined) {
+            this.addQuickStyleClass('mu-lmx-quick-theme');
+            this.domNode!.dataset.lmxTheme = theme;
+        }
         const style = this.domNode!.style;
         for (const property of presentProperties) {
             const value = attributes[property];
@@ -339,13 +350,19 @@ class LmxDirective extends Parent {
             ? 'TRANG BÌA'
             : name === 'toc'
             ? 'MỤC LỤC'
+            : name === 'references'
+            ? 'TÀI LIỆU THAM KHẢO'
             : name === 'list-of-figures' ? 'DANH SÁCH HÌNH' : 'DANH SÁCH BẢNG';
         appendText(preview, 'mu-lmx-generated-title', title);
         const list = document.createElement('div');
         list.className = 'mu-lmx-generated-list';
         const empty = document.createElement('p');
         empty.className = 'mu-lmx-generated-empty';
-        empty.textContent = name === 'toc' ? 'Mục lục sẽ được tạo từ các heading.' : 'Chưa có mục nào.';
+        empty.textContent = name === 'toc'
+            ? 'Mục lục sẽ được tạo từ các heading.'
+            : name === 'references'
+            ? 'Tài liệu tham khảo sẽ được tạo từ danh mục trích dẫn.'
+            : 'Chưa có mục nào.';
         list.append(empty);
         preview.append(list);
     }

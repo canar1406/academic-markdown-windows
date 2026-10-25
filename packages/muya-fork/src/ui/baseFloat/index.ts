@@ -78,7 +78,7 @@ abstract class BaseFloat {
         const { floatBox } = this;
 
         const keydownHandler = (event: Event) => {
-            if (isKeyboardEvent(event) && event.key === EVENT_KEYS.Escape)
+            if (isKeyboardEvent(event) && !event.isComposing && event.key === EVENT_KEYS.Escape)
                 this.hide();
         };
 

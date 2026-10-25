@@ -1,8 +1,18 @@
 import {
+  crossReferenceDisplayPrefix,
+  extractCitedKeysFromMarkdown,
+  formatAuthorInlineApa,
+  formatBibliographyItems,
+  isCrossReferenceKey,
+  normalizeCitationStyle,
   parseDocumentThemeSelection,
   parseFrontMatter,
   parseLmx,
+  readDocumentCitationStyle,
+  readDocumentReferences,
   validateQuickStyleAttributes,
+  type CitationReferenceEntry,
+  type CitationStyle,
   type DocumentDiagnostic,
   type DocumentThemeSelection,
   type LmxDirectiveNode,
@@ -163,6 +173,17 @@ export function exportMarkdownToLatex(
     ...collectLayoutIds(node.children),
   ]);
   settings.explicitThemeLayoutNodes = [...new Set(collectLayoutIds(lmx.directives))];
+  const collectReferenceBodies = (nodes: LmxDirectiveNode[]): string[] => nodes.flatMap((node) => [
+    ...(node.name === 'references' ? [node.content] : []),
+    ...collectReferenceBodies(node.children),
+  ]);
+  const hasExplicitReferencesDirective = (nodes: LmxDirectiveNode[]): boolean => nodes.some((node) => (
+    node.name === 'references' || hasExplicitReferencesDirective(node.children)
+  ));
+  const citationStyle = readDocumentCitationStyle(frontMatter.data);
+  const references = readDocumentReferences(frontMatter.data, collectReferenceBodies(lmx.directives));
+  const citedKeys = extractCitedKeysFromMarkdown(frontMatter.body);
+  const explicitReferences = hasExplicitReferencesDirective(lmx.directives);
   const context: RenderContext = {
     theme: documentTheme,
     fallbackTheme,
@@ -170,14 +191,21 @@ export function exportMarkdownToLatex(
     resolveAlias,
     settings,
     lastExplicitStructure: explicitStructureDirectives.at(-1),
+    citationStyle,
+    references,
+    citedKeys,
+    emittedAppendix: false,
   };
-  const body = renderSourceWithDirectives(
+  let body = renderSourceWithDirectives(
     frontMatter.body,
     lmx.directives,
     diagnostics,
     assets,
     context,
   );
+  if (!explicitReferences && references.length > 0 && citedKeys.length > 0) {
+    body += renderReferencesSection(citationStyle, 'Tài liệu tham khảo', context);
+  }
   if (diagnostics.some((item) => item.severity === 'error')) {
     return { latex: '', diagnostics, settings, assetPaths: [...assets].sort() };
   }
@@ -334,6 +362,57 @@ function renderDirective(
       return applyQuickStyle(renderTableDirective(node, assets, diagnostics, directiveContext));
     case 'listing':
       return applyQuickStyle(renderListing(node, diagnostics, directiveContext));
+    case 'equation': {
+      const rawMath = node.content.trim();
+      const fenceMatch = /^\$\$\s*\r?\n?([\s\S]*?)\r?\n?\s*\$\$$/u.exec(rawMath)
+        ?? /^\\\[\s*\r?\n?([\s\S]*?)\r?\n?\s*\\\]$/u.exec(rawMath);
+      const mathBody = (fenceMatch?.[1] ?? rawMath).trim();
+      return applyQuickStyle(`\\begin{equation}\n${label}${mathBody}\n\\end{equation}\n\n`);
+    }
+    case 'definition': {
+      const formattedTitle = title
+        ? formatQuickStyleTitle(title, quickStyle, diagnostics, node)
+        : '';
+      const body = renderBody();
+      return applyQuickStyle(`\\makeatletter\\@ifundefined{c@hcmutdef}{\\newcounter{hcmutdef}}{}\\makeatother\n\\par\\medskip\\noindent\\refstepcounter{hcmutdef}\\textbf{Định nghĩa \\thehcmutdef${formattedTitle ? ` (${formattedTitle})` : ''}.} ${label}${body}\\par\\medskip\n\n`);
+    }
+    case 'proof': {
+      const formattedTitle = title
+        ? formatQuickStyleTitle(title, quickStyle, diagnostics, node)
+        : '';
+      const option = formattedTitle ? `[${formattedTitle}]` : '[Chứng minh]';
+      const body = renderBody();
+      return applyQuickStyle(`\\begin{proof}${option}\n${label}${body}\n\\end{proof}\n\n`);
+    }
+    case 'remark': {
+      const formattedTitle = title
+        ? formatQuickStyleTitle(title, quickStyle, diagnostics, node)
+        : '';
+      const body = renderBody();
+      return applyQuickStyle(`\\makeatletter\\@ifundefined{c@hcmutrem}{\\newcounter{hcmutrem}}{}\\makeatother\n\\par\\medskip\\noindent\\refstepcounter{hcmutrem}\\textit{Nhận xét \\thehcmutrem${formattedTitle ? ` (${formattedTitle})` : ''}.} ${label}${body}\\par\\medskip\n\n`);
+    }
+    case 'algorithm': {
+      const captionText = stringAttribute(node, 'caption') ?? title ?? '';
+      const formattedCaption = captionText
+        ? formatQuickStyleTitle(captionText, quickStyle, diagnostics, node)
+        : '';
+      const body = renderBody();
+      return applyQuickStyle(`\\makeatletter\\@ifundefined{c@hcmutalg}{\\newcounter{hcmutalg}}{}\\makeatother\n\\par\\medskip\\noindent\\rule{\\linewidth}{0.8pt}\\par\\noindent\\refstepcounter{hcmutalg}\\textbf{Thuật toán \\thehcmutalg${formattedCaption ? `: ${formattedCaption}` : ''}}\\par\\noindent\\rule{\\linewidth}{0.4pt}\\par\\smallskip\n${label}${body}\n\\par\\noindent\\rule{\\linewidth}{0.8pt}\\par\\medskip\n\n`);
+    }
+    case 'appendix': {
+      const sectionTitle = title ?? 'Phụ lục';
+      const body = renderBody();
+      const appendixSwitch = !context.emittedAppendix ? '\\appendix\n' : '';
+      context.emittedAppendix = true;
+      return applyQuickStyle(`\\clearpage\n${appendixSwitch}\\section{${escapeLatexText(sectionTitle)}}\n${label}${body}\n\n`);
+    }
+    case 'references': {
+      warnUnrenderedQuickStyle(quickStyle, node, diagnostics);
+      const styleAttr = stringAttribute(node, 'style');
+      const style = styleAttr ? normalizeCitationStyle(styleAttr) : directiveContext.citationStyle;
+      const refTitle = title ?? 'Tài liệu tham khảo';
+      return renderReferencesSection(style, refTitle, directiveContext);
+    }
     case 'front-section': {
       const sectionTitle = title ?? frontSectionTitle(stringAttribute(node, 'kind'));
       const numbered = node.attributes.numbered === true;
@@ -370,6 +449,50 @@ interface RenderContext {
   instanceThemeAlias?: string;
   settings: ThemeDocumentSettings;
   lastExplicitStructure?: LmxDirectiveNode;
+  citationStyle: CitationStyle;
+  references: CitationReferenceEntry[];
+  citedKeys: string[];
+  emittedAppendix?: boolean;
+}
+
+function renderReferencesSection(
+  style: CitationStyle,
+  refTitle: string,
+  context: RenderContext,
+): string {
+  const items = formatBibliographyItems(context.references, style, context.citedKeys);
+  if (items.length === 0) {
+    return `\\section*{${escapeLatexText(refTitle)}}\n\\addcontentsline{toc}{section}{${escapeLatexText(refTitle)}}\n\n`;
+  }
+  if (style === 'apa') {
+    const apaItems = items.map((item) => {
+      const yearText = item.year || 'n.d.';
+      const venuePart = item.venue
+        ? ` \\emph{${escapeLatexText(item.venue)}}${item.details ? `, ${escapeLatexText(item.details)}` : ''}.`
+        : item.details
+          ? ` ${escapeLatexText(item.details)}.`
+          : '';
+      const urlPart = item.doiOrUrl
+        ? ` \\url{${latexPath(item.doiOrUrl.startsWith('http') ? item.doiOrUrl : `https://doi.org/${item.doiOrUrl}`)}}`
+        : '';
+      return `\\par\\noindent\\hypertarget{cite.${sanitizeLabel(item.id)}}{}${escapeLatexText(item.authors)} (${escapeLatexText(yearText)}). ${escapeLatexText(item.title)}.${venuePart}${urlPart}\\par\\smallskip`;
+    }).join('\n');
+    return `\\section*{${escapeLatexText(refTitle)}}\n\\addcontentsline{toc}{section}{${escapeLatexText(refTitle)}}\n\\begingroup\n\\setlength{\\parindent}{-1.5em}\n\\setlength{\\leftskip}{1.5em}\n${apaItems}\n\\endgroup\n\n`;
+  }
+  const bibItems = items.map((item) => {
+    const parts: string[] = [];
+    if (item.authors) parts.push(`${escapeLatexText(item.authors)},`);
+    parts.push(`\`\`${escapeLatexText(item.title)},''`);
+    if (item.venue) parts.push(`\\emph{${escapeLatexText(item.venue)}},`);
+    if (item.details) parts.push(`${escapeLatexText(item.details)},`);
+    if (item.year) parts.push(`${escapeLatexText(item.year)}.`);
+    if (item.doiOrUrl) {
+      const url = item.doiOrUrl.startsWith('http') ? item.doiOrUrl : `https://doi.org/${item.doiOrUrl}`;
+      parts.push(`\\url{${latexPath(url)}}.`);
+    }
+    return `\\bibitem{${sanitizeLabel(item.id)}} ${parts.join(' ')}`;
+  }).join('\n');
+  return `\\renewcommand{\\refname}{${escapeLatexText(refTitle)}}\n\\begin{thebibliography}{${Math.max(9, items.length)}}\n\\addcontentsline{toc}{section}{${escapeLatexText(refTitle)}}\n${bibItems}\n\\end{thebibliography}\n\n`;
 }
 
 function isStructureBlock(name: string): name is ThemeStructureBlock {
@@ -608,7 +731,7 @@ function renderInline(
 ): string {
   return nodes.map((node) => {
     switch (node.type) {
-      case 'text': return escapeLatexText(node.value);
+      case 'text': return renderTextWithCitationsAndRefs(node.value, context);
       case 'strong': return `\\textbf{${renderInline(node.children, assets, diagnostics, context)}}`;
       case 'emphasis': return `\\emph{${renderInline(node.children, assets, diagnostics, context)}}`;
       case 'delete': return `\\sout{${renderInline(node.children, assets, diagnostics, context)}}`;
@@ -627,6 +750,68 @@ function renderInline(
         : '';
     }
   }).join('');
+}
+
+function renderCrossReferenceLatex(key: string): string {
+  const sanitized = sanitizeLabel(key);
+  if (key.toLowerCase().startsWith('eq-')) {
+    return `Phương trình~(\\ref{${sanitized}})`;
+  }
+  return `${escapeLatexText(crossReferenceDisplayPrefix(key))}~\\ref{${sanitized}}`;
+}
+
+function renderTextWithCitationsAndRefs(
+  value: string,
+  context: RenderContext,
+): string {
+  if (!value.includes('@')) {
+    return escapeLatexText(value);
+  }
+  const refMap = new Map(context.references.map((entry) => [entry.id, entry]));
+  const pattern = /\[((?:\s*@[A-Za-z0-9_-]+(?:[.:][A-Za-z0-9_-]+)*\s*[;,]?\s*)+)\]|(?<![A-Za-z0-9_.:@])@((?:fig|tbl|eq|lst|thm|def|alg|rem|property|proposition|corollary|lemma|exercise)-[A-Za-z0-9_-]+(?:[.:][A-Za-z0-9_-]+)*)/g;
+  let lastIndex = 0;
+  let result = '';
+  for (const match of value.matchAll(pattern)) {
+    const matchIndex = match.index ?? 0;
+    if (matchIndex > lastIndex) {
+      result += escapeLatexText(value.slice(lastIndex, matchIndex));
+    }
+    const bracketInner = match[1];
+    const standaloneRefKey = match[2];
+    if (standaloneRefKey) {
+      result += renderCrossReferenceLatex(standaloneRefKey);
+    } else if (bracketInner) {
+      const keys = [...bracketInner.matchAll(/@([A-Za-z0-9_-]+(?:[.:][A-Za-z0-9_-]+)*)/g)].map((item) => item[1] ?? '').filter(Boolean);
+      const crossRefs = keys.filter((key) => isCrossReferenceKey(key));
+      const citeKeys = keys.filter((key) => !isCrossReferenceKey(key));
+      const renderedParts: string[] = [];
+      for (const crossKey of crossRefs) {
+        renderedParts.push(renderCrossReferenceLatex(crossKey));
+      }
+      if (citeKeys.length > 0) {
+        if (context.citationStyle === 'apa') {
+          const apaLabels = citeKeys.map((key) => {
+            const entry = refMap.get(key);
+            const label = entry
+              ? `${formatAuthorInlineApa(entry.author)}, ${entry.year || 'n.d.'}`
+              : key;
+            return `\\hyperlink{cite.${sanitizeLabel(key)}}{${escapeLatexText(label)}}`;
+          });
+          renderedParts.push(`(${apaLabels.join('; ')})`);
+        } else {
+          renderedParts.push(`\\cite{${citeKeys.map(sanitizeLabel).join(',')}}`);
+        }
+      }
+      result += renderedParts.join(', ');
+    } else {
+      result += escapeLatexText(match[0]);
+    }
+    lastIndex = matchIndex + match[0].length;
+  }
+  if (lastIndex < value.length) {
+    result += escapeLatexText(value.slice(lastIndex));
+  }
+  return result;
 }
 
 function renderTable(
@@ -715,6 +900,9 @@ function validatedQuickStyleAttributes(
 ): QuickStyleAttributes {
   const semanticAttributes = new Set(({
     theorem: ['title'],
+    definition: ['title'],
+    proof: ['title'],
+    remark: ['title'],
     property: ['title'],
     proposition: ['title'],
     corollary: ['title'],
@@ -722,8 +910,12 @@ function validatedQuickStyleAttributes(
     exercise: ['title'],
     figure: ['caption', 'width', 'placement'],
     table: ['caption', 'placement'],
+    equation: ['title'],
+    algorithm: ['caption', 'title'],
     listing: ['caption', 'language', 'lineNumbers'],
     'front-section': ['kind', 'title', 'numbered', 'pageStyle'],
+    appendix: ['title'],
+    references: ['style', 'title'],
   } as Record<string, string[]>)[node.name] ?? []);
   const styleAttributes = Object.fromEntries(
     Object.entries(node.attributes).filter(([key]) => !semanticAttributes.has(key)),
@@ -959,7 +1151,7 @@ function collectUnusedTitleStyles(
 }
 
 function isTheoremDirective(name: string): boolean {
-  return ['theorem', 'property', 'proposition', 'corollary', 'lemma', 'exercise'].includes(name);
+  return ['theorem', 'definition', 'proof', 'remark', 'algorithm', 'property', 'proposition', 'corollary', 'lemma', 'exercise'].includes(name);
 }
 
 function hasRenderableBodyQuickStyle(

@@ -127,6 +127,9 @@ class ParagraphContent extends Format {
     }
 
     override inputHandler(event: Event) {
+        if (this.isComposed)
+            return;
+
         super.inputHandler(event);
         const { eventCenter } = this.muya;
 

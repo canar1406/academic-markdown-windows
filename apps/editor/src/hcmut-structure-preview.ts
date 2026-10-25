@@ -1,10 +1,37 @@
-import { parseFrontMatter, parseLmx } from '@markdown/document-core';
+import {
+  extractCitedKeysFromMarkdown,
+  formatBibliographyItems,
+  parseFrontMatter,
+  parseLmx,
+  readDocumentCitationStyle,
+  readDocumentReferences,
+} from '@markdown/document-core';
 import type { StructurePreviewRenderer } from '@markdown/muya-core';
 import { compileAuthoredTheme, type AuthoredThemeCompilation, type AuthoredLayout, type ThemeSceneNode, type ThemeSceneV2 } from '@markdown/theme-engine';
 import { hcmutLogoUrl } from '@markdown/theme-hcmut-report-v1';
 import type { VisualPageDecorationSettings } from './visual-page-flow';
 
+let cachedFrontMatterSlice: string | null = null;
+let cachedDecorationSettings: VisualPageDecorationSettings | null = null;
+
+function extractFrontMatterCacheKey(markdown: string): string | null {
+  if (!markdown.startsWith('---') && !markdown.startsWith('{')) {
+    return '';
+  }
+  if (markdown.startsWith('---')) {
+    const closeMatch = /\r?\n---(?:\r?\n|$)/.exec(markdown.slice(3));
+    if (closeMatch && closeMatch.index !== undefined) {
+      return markdown.slice(0, 3 + closeMatch.index + closeMatch[0].length);
+    }
+  }
+  return null;
+}
+
 export function readVisualPageDecorationSettings(markdown: string): VisualPageDecorationSettings {
+  const cacheKey = extractFrontMatterCacheKey(markdown);
+  if (cacheKey !== null && cacheKey === cachedFrontMatterSlice && cachedDecorationSettings !== null) {
+    return cachedDecorationSettings;
+  }
   const data = parseFrontMatter(markdown).data;
   const lmx = record(data.lmx);
   if (lmx.authoredTheme !== undefined) {
@@ -12,6 +39,10 @@ export function readVisualPageDecorationSettings(markdown: string): VisualPageDe
     const settings = readAuthoredPageDecorations(data, compiled.resolvedScene);
     if (compiled.headerLayout) settings.header.renderContent = () => renderAuthoredLayoutPreview(compiled.headerLayout!);
     if (compiled.footerLayout) settings.footer.renderContent = () => renderAuthoredLayoutPreview(compiled.footerLayout!);
+    if (cacheKey !== null) {
+      cachedFrontMatterSlice = cacheKey;
+      cachedDecorationSettings = settings;
+    }
     return settings;
   }
   const structure = mergedRecord(record(data.structure), record(lmx.structure));
@@ -20,7 +51,7 @@ export function readVisualPageDecorationSettings(markdown: string): VisualPageDe
   const footer = mergedRecord(record(data.footer), record(lmx.footer));
   const pageNumber = stringValue(footer.pageNumber, 'current-total');
 
-  return {
+  const settings: VisualPageDecorationSettings = {
     cover: {
       heading: stringValue(cover.heading, 'BÁO CÁO'),
       logoEnabled: cover.logoEnabled !== false,
@@ -64,6 +95,11 @@ export function readVisualPageDecorationSettings(markdown: string): VisualPageDe
       ruleWidthPt: numberValue(footer.ruleWidthPt, 0.3, 0, 2),
     },
   };
+  if (cacheKey !== null) {
+    cachedFrontMatterSlice = cacheKey;
+    cachedDecorationSettings = settings;
+  }
+  return settings;
 }
 
 export function createHcmutStructurePreviewRenderer(
@@ -77,29 +113,127 @@ export function refreshHcmutStructurePreviews(
   editor: HTMLElement,
   getMarkdown: () => string,
 ): void {
-  editor.querySelectorAll<HTMLElement>('.mu-lmx-structure-preview').forEach((container) => {
+  const containers = [...editor.querySelectorAll<HTMLElement>('.mu-lmx-structure-preview')];
+  if (containers.length === 0) return;
+  let cachedMarkdown: string | null = null;
+  const readMarkdownOnce = (): string => {
+    if (cachedMarkdown === null) cachedMarkdown = getMarkdown();
+    return cachedMarkdown;
+  };
+  for (const container of containers) {
     const name = container.closest<HTMLElement>('[data-lmx-name]')?.dataset.lmxName;
-    if (!name || !previewNames.has(name)) return;
-    container.replaceChildren();
-    container.classList.remove('visual-page-preview', 'visual-structure-disabled');
-    delete container.dataset.structureEnabled;
-    renderHcmutStructurePreview(name, container, getMarkdown);
-  });
+    if (!name || !previewNames.has(name)) continue;
+    renderHcmutStructurePreview(name, container, readMarkdownOnce, true);
+  }
 }
 
-const previewNames = new Set(['theme-layout', 'cover', 'toc', 'list-of-figures', 'list-of-tables', 'pagebreak']);
+const previewNames = new Set(['theme-layout', 'cover', 'toc', 'list-of-figures', 'list-of-tables', 'references', 'pagebreak']);
+
+function resetStructurePreviewContainer(container: HTMLElement): void {
+  container.replaceChildren();
+  container.classList.remove('visual-page-preview', 'visual-structure-disabled');
+  delete container.dataset.structureEnabled;
+}
+
+function computeStructurePreviewSignature(
+  name: string,
+  container: HTMLElement,
+  parsed: ReturnType<typeof parseFrontMatter>,
+): string {
+  const data = parsed.data;
+  const lmx = record(data.lmx);
+  if (lmx.authoredTheme !== undefined) {
+    return JSON.stringify({
+      mode: 'authored',
+      name,
+      nodeId: container.dataset.authoredLayoutNodeId ?? null,
+      data,
+      headings: name === 'toc' ? extractTocHeadings(parsed.body, 4) : null,
+      directives: (name === 'list-of-figures' || name === 'list-of-tables') && parsed.body.includes(':::')
+        ? parseLmx(parsed.body).directives
+          .filter((d) => d.name === (name === 'list-of-figures' ? 'figure' : 'table'))
+          .slice(0, 18)
+          .map((d) => ({ id: d.identifier, caption: d.attributes.caption }))
+        : null,
+    });
+  }
+  if (name === 'theme-layout') {
+    return 'theme-layout:no-authored-theme';
+  }
+  const structure = mergedRecord(record(data.structure), record(lmx.structure));
+  const cover = mergedRecord(record(data.cover), record(lmx.cover));
+  if (name === 'cover') {
+    return JSON.stringify({
+      mode: 'hcmut-cover',
+      enabled: structure.cover !== false,
+      cover,
+    });
+  }
+  if (name === 'toc') {
+    const tocDepth = numberValue(structure.tocDepth, 3, 1, 4);
+    return JSON.stringify({
+      mode: 'hcmut-toc',
+      enabled: structure.toc !== false,
+      tocDepth,
+      headings: structure.toc !== false ? extractTocHeadings(parsed.body, tocDepth).slice(0, 18) : null,
+    });
+  }
+  if (name === 'references') {
+    const refBodies = parsed.body.includes(':::references')
+      ? parseLmx(parsed.body).directives.filter((d) => d.name === 'references').map((d) => d.content)
+      : [];
+    return JSON.stringify({
+      mode: 'hcmut-references',
+      style: readDocumentCitationStyle(data),
+      references: readDocumentReferences(data, refBodies),
+      citedKeys: extractCitedKeysFromMarkdown(parsed.body),
+    });
+  }
+  const targetName = name === 'list-of-figures' ? 'figure' : 'table';
+  const enabled = name === 'list-of-figures'
+    ? structure.listOfFigures !== false
+    : structure.listOfTables !== false;
+  const items = enabled && parsed.body.includes(':::')
+    ? parseLmx(parsed.body).directives
+      .filter((d) => d.name === targetName)
+      .slice(0, 18)
+      .map((d) => ({ id: d.identifier, caption: d.attributes.caption }))
+    : [];
+  return JSON.stringify({
+    mode: `hcmut-${name}`,
+    enabled,
+    items,
+  });
+}
 
 function renderHcmutStructurePreview(
   name: string,
   container: HTMLElement,
   getMarkdown: () => string,
+  preserveIfUnchanged = false,
 ): void {
   if (name === 'pagebreak') {
+    if (preserveIfUnchanged && container.classList.contains('hcmut-pagebreak-preview')) {
+      return;
+    }
+    resetStructurePreviewContainer(container);
     renderPageBreakPreview(container);
+    container.dataset.structurePreviewSignature = 'pagebreak';
     return;
   }
   const markdown = getMarkdown();
-  const data = parseFrontMatter(markdown).data;
+  const parsed = parseFrontMatter(markdown);
+  const nextSignature = computeStructurePreviewSignature(name, container, parsed);
+  if (
+    preserveIfUnchanged
+    && container.childNodes.length > 0
+    && container.dataset.structurePreviewSignature === nextSignature
+  ) {
+    return;
+  }
+  resetStructurePreviewContainer(container);
+  container.dataset.structurePreviewSignature = nextSignature;
+  const data = parsed.data;
   const lmx = record(data.lmx);
   if (lmx.authoredTheme !== undefined) {
     const compiled = compileAuthoredTheme(lmx.authoredTheme, data);
@@ -135,7 +269,7 @@ function renderHcmutStructurePreview(
     }
     container.dataset.structureEnabled = 'true';
     container.classList.remove('visual-structure-disabled');
-    container.classList.add('visual-page-preview');
+    if (name !== 'references') container.classList.add('visual-page-preview');
     if (name === 'cover') renderAuthoredCoverPreview(container, markdown, scene, compiled.coverLayout);
     else renderGeneratedListPreview(container, name, markdown);
     return;
@@ -152,7 +286,7 @@ function renderHcmutStructurePreview(
     return;
   }
   container.dataset.structureEnabled = 'true';
-  container.classList.add('visual-page-preview');
+  if (name !== 'references') container.classList.add('visual-page-preview');
   if (name === 'cover') renderCoverPreview(container, markdown, settings);
   else renderGeneratedListPreview(container, name, markdown);
 }
@@ -356,6 +490,7 @@ function structureTitle(name: string): string {
     case 'toc': return 'Mục lục';
     case 'list-of-figures': return 'Danh sách hình';
     case 'list-of-tables': return 'Danh sách bảng';
+    case 'references': return 'Tài liệu tham khảo';
     default: return name;
   }
 }
@@ -458,6 +593,10 @@ function renderCoverPreview(
 }
 
 function renderGeneratedListPreview(container: HTMLElement, name: string, markdown: string): void {
+  if (name === 'references') {
+    renderReferencesPreview(container, markdown);
+    return;
+  }
   const title = name === 'toc'
     ? 'Mục lục'
     : name === 'list-of-figures' ? 'Danh sách hình vẽ' : 'Danh sách bảng';
@@ -490,6 +629,66 @@ function renderGeneratedListPreview(container: HTMLElement, name: string, markdo
     const empty = document.createElement('p');
     empty.className = 'hcmut-generated-empty';
     empty.textContent = name === 'toc' ? 'Mục lục sẽ được tạo từ các heading.' : 'Chưa có mục nào.';
+    list.append(empty);
+  }
+  container.append(list);
+}
+
+function renderReferencesPreview(container: HTMLElement, markdown: string): void {
+  const parsed = parseFrontMatter(markdown);
+  const style = readDocumentCitationStyle(parsed.data);
+  const refBodies = parsed.body.includes(':::references')
+    ? parseLmx(parsed.body).directives.filter((d) => d.name === 'references').map((d) => d.content)
+    : [];
+  const references = readDocumentReferences(parsed.data, refBodies);
+  const citedKeys = extractCitedKeysFromMarkdown(parsed.body);
+  const items = formatBibliographyItems(references, style, citedKeys);
+
+  const headerRow = document.createElement('div');
+  headerRow.className = 'hcmut-references-header-row';
+  appendText(headerRow, 'hcmut-generated-title', 'Tài liệu tham khảo');
+  appendText(headerRow, 'hcmut-references-style-badge', style === 'apa' ? 'Chuẩn APA' : 'Chuẩn IEEE');
+  container.append(headerRow);
+
+  const list = document.createElement('div');
+  list.className = `hcmut-generated-list hcmut-references-list style-${style}`;
+  for (const item of items) {
+    const row = document.createElement('div');
+    row.className = `hcmut-reference-row style-${style}`;
+    row.dataset.referenceKey = item.id;
+    if (style === 'ieee') {
+      appendText(row, 'hcmut-reference-index', `[${item.index}]`);
+      const body = document.createElement('div');
+      body.className = 'hcmut-reference-body';
+      const parts: string[] = [];
+      if (item.authors) parts.push(`${item.authors},`);
+      parts.push(`“${item.title},”`);
+      if (item.venue) parts.push(`${item.venue},`);
+      if (item.details) parts.push(`${item.details},`);
+      if (item.year) parts.push(`${item.year}.`);
+      if (item.doiOrUrl) parts.push(item.doiOrUrl);
+      body.textContent = parts.join(' ');
+      row.append(body);
+    } else {
+      const body = document.createElement('div');
+      body.className = 'hcmut-reference-body apa-hanging';
+      const yearText = item.year || 'n.d.';
+      const venuePart = item.venue
+        ? ` ${item.venue}${item.details ? `, ${item.details}` : ''}.`
+        : item.details
+          ? ` ${item.details}.`
+          : '';
+      const urlPart = item.doiOrUrl ? ` ${item.doiOrUrl}` : '';
+      body.textContent = `${item.authors} (${yearText}). ${item.title}.${venuePart}${urlPart}`;
+      row.append(body);
+    }
+    appendText(row, 'hcmut-reference-key', `[@${item.id}]`);
+    list.append(row);
+  }
+  if (list.childElementCount === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'hcmut-generated-empty';
+    empty.textContent = 'Chưa có tài liệu tham khảo. Nhấn vào đây hoặc mở mục Tài liệu tham khảo (References) ở thanh bên phải để thêm trích dẫn IEEE / APA hoặc dán BibTeX.';
     list.append(empty);
   }
   container.append(list);

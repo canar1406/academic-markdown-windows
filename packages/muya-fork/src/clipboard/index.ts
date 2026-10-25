@@ -54,7 +54,9 @@ class Clipboard {
         };
 
         const keydownHandler = (event: Event) => {
-            const { key, metaKey } = event as KeyboardEvent;
+            const { key, metaKey, isComposing } = event as KeyboardEvent;
+            if (isComposing || this.muya.editor.activeContentBlock?.isComposed)
+                return;
 
             const { isSelectionInSameBlock } = this.selection.getSelection() ?? {};
             if (isSelectionInSameBlock)

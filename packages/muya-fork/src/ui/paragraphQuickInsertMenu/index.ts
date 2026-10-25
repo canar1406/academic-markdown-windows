@@ -57,8 +57,9 @@ export class ParagraphQuickInsertMenu extends BaseScrollFloat {
         if (this.renderArray.length > 0) {
             this.activeItem = this
                 .renderArray[0] as IQuickInsertMenuItem['children'][number];
-            const activeEle = this.getItemElement(this.activeItem) as HTMLElement;
-            this.activeEleScrollIntoView(activeEle);
+        }
+        else {
+            this.activeItem = null;
         }
     }
 
@@ -224,6 +225,10 @@ export class ParagraphQuickInsertMenu extends BaseScrollFloat {
         }
         this.renderData = result;
         this.render();
+        if (this.activeItem) {
+            const activeEle = this.getItemElement(this.activeItem);
+            this.activeEleScrollIntoView(activeEle);
+        }
     }
 
     override selectItem({ label }: IQuickInsertMenuItem['children'][number]) {

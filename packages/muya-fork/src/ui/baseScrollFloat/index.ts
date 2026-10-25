@@ -23,12 +23,35 @@ abstract class BaseScrollFloat extends BaseFloat {
     }
 
     activeEleScrollIntoView(ele: HTMLElement) {
-        if (ele) {
-            ele.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center',
-                inline: 'start',
-            });
+        if (!ele)
+            return;
+        const scrollContainer = this.container;
+        if (!scrollContainer || scrollContainer.clientHeight <= 0) {
+            if (typeof ele.scrollIntoView === 'function') {
+                ele.scrollIntoView({
+                    behavior: 'auto',
+                    block: 'nearest',
+                    inline: 'start',
+                });
+            }
+            return;
+        }
+        if (this.renderArray.length > 0 && this.activeItem === this.renderArray[0]) {
+            scrollContainer.scrollTop = 0;
+            return;
+        }
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const eleRect = ele.getBoundingClientRect();
+        const stickyHeader = scrollContainer.querySelector<HTMLElement>('.title');
+        const stickyTopOffset = stickyHeader ? stickyHeader.offsetHeight : 0;
+        const visibleTop = containerRect.top + stickyTopOffset;
+        const visibleBottom = containerRect.bottom;
+
+        if (eleRect.top < visibleTop) {
+            scrollContainer.scrollTop = Math.max(0, scrollContainer.scrollTop - (visibleTop - eleRect.top) - 4);
+        }
+        else if (eleRect.bottom > visibleBottom) {
+            scrollContainer.scrollTop += (eleRect.bottom - visibleBottom) + 6;
         }
     }
 
@@ -40,21 +63,27 @@ abstract class BaseScrollFloat extends BaseFloat {
                 return;
             switch (event.key) {
                 case EVENT_KEYS.ArrowUp:
-                    if (this.renderArray.length > 0)
+                    if (this.renderArray.length > 0) {
+                        event.preventDefault();
                         this.step('previous');
+                    }
                     break;
 
                 case EVENT_KEYS.ArrowDown:
                     // // falls through
 
                 case EVENT_KEYS.Tab:
-                    if (this.renderArray.length > 0)
+                    if (this.renderArray.length > 0) {
+                        event.preventDefault();
                         this.step('next');
+                    }
                     break;
 
                 case EVENT_KEYS.Enter:
-                    if (this.activeItem != null)
+                    if (this.activeItem != null) {
+                        event.preventDefault();
                         this.selectItem(this.activeItem);
+                    }
                     break;
 
                 default:

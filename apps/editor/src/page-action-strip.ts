@@ -34,6 +34,15 @@ export function installVisualPageActionStrip(editor: HTMLElement): () => void {
     layer.style.left = `${editor.offsetLeft}px`;
     layer.style.width = `${editor.offsetWidth}px`;
     layer.style.height = `${editor.offsetHeight}px`;
+    const stageRect = stage.getBoundingClientRect();
+    const editorRect = editor.getBoundingClientRect();
+    const scale = editor.offsetWidth > 0 ? editorRect.width / editor.offsetWidth : 1;
+    if (stageRect.width > 0 && editorRect.right > stageRect.right + 1) {
+      const rightOverflowPx = Math.max(0, (editorRect.right - stageRect.right) / (scale || 1));
+      layer.style.setProperty('--visual-action-strip-right-inset', `${Math.round(rightOverflowPx + 12)}px`);
+    } else {
+      layer.style.setProperty('--visual-action-strip-right-inset', '8px');
+    }
   };
 
   const render = (pages: VisualPageInventoryEntry[]): void => {
@@ -64,11 +73,13 @@ export function installVisualPageActionStrip(editor: HTMLElement): () => void {
   const visibilityObserver = new MutationObserver(synchronizeLayerFrame);
   visibilityObserver.observe(editor, { attributes: true, attributeFilter: ['hidden'] });
   editor.addEventListener('visual-page-inventory-changed', handleInventory);
+  stage.addEventListener('scroll', synchronizeLayerFrame, { passive: true });
   window.addEventListener('resize', synchronizeLayerFrame);
 
   return () => {
     visibilityObserver.disconnect();
     editor.removeEventListener('visual-page-inventory-changed', handleInventory);
+    stage.removeEventListener('scroll', synchronizeLayerFrame);
     window.removeEventListener('resize', synchronizeLayerFrame);
     layer.remove();
   };

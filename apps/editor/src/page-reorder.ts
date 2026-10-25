@@ -77,6 +77,22 @@ export function createPageDeletePlan(
     const leadingBreak = nextPage?.blockIndices.find(index => isPageBreakState(states[index]));
     if (leadingBreak !== undefined) return [...indices, leadingBreak].sort((a, b) => a - b);
   }
+
+  const hasBreakInIndices = indices.some(index => isPageBreakState(states[index]));
+  if (pageIndex > 0 && page.kind !== 'blank' && !hasBreakInIndices) {
+    const firstIndex = indices[0]!;
+    if (firstIndex > 0 && isPageBreakState(states[firstIndex - 1])) {
+      return [firstIndex - 1, ...indices];
+    }
+    const followingIndex = indices.at(-1)! + 1;
+    if (
+      page.kind === 'semantic'
+      && followingIndex < states.length
+      && isPageBreakState(states[followingIndex])
+    ) {
+      return [...indices, followingIndex];
+    }
+  }
   return indices;
 }
 

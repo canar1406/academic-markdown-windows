@@ -2,6 +2,7 @@ import { createEnvelope, isSupportedEnvelope, type BridgeEnvelope } from '@markd
 import { exportMarkdownToLatex } from '@markdown/latex-exporter';
 import { hcmutReportTheme } from '@markdown/theme-hcmut-report-v1';
 import { installHostTransport, postToHost } from './host-transport';
+import { VISUAL_PAGE_LAYOUT_COMMITTED } from './visual-page-flow';
 export { postToHost } from './host-transport';
 import { projectThemeSceneToMarkdown } from './studio-preview';
 import { applyAuthoredThemeToMarkdown } from './authored-theme-application';
@@ -32,7 +33,7 @@ import {
 const MAX_DROPPED_IMAGE_BYTES = 20 * 1024 * 1024;
 const IMAGE_MIME = /^image\/(?:png|jpe?g|gif|webp|svg\+xml)$/i;
 const MIN_THUMBNAIL_WIDTH = 64;
-const MAX_THUMBNAIL_WIDTH = 320;
+const MAX_THUMBNAIL_WIDTH = 640;
 
 export interface PageNavigatorDemand {
   pageIndices: number[];
@@ -59,6 +60,8 @@ declare global {
       revealLocation(location: DocumentSourceRange): void;
       setPageNavigatorDemand(demand: PageNavigatorDemand): void;
       search(action: SearchAction): void;
+      insertAcademicBlock(commandId: string): void;
+      insertText(text: string): void;
       handleEnvelope(envelope: BridgeEnvelope): void;
     };
   }
@@ -139,6 +142,7 @@ export function installBridge(editor: {
   }) => void): void;
   setMode?(mode: 'visual' | 'source'): void;
   insertTextAtSelection?(text: string): boolean;
+  insertLmxCommand?(commandId: string): void;
   deleteSelectedPage?(): boolean;
   selectPage?(pageIndex: number): boolean;
   addPage?(afterPageIndex: number): boolean;
@@ -183,8 +187,8 @@ export function installBridge(editor: {
   let metadataState = readMetadataState(editor.getMarkdown());
   const pendingImageDrops = new Map<string, (relativePath: string | null) => void>();
 
-  const postMetadataChangeIfNeeded = (force = false): void => {
-    const nextState = readMetadataState(editor.getMarkdown());
+  const postMetadataChangeIfNeeded = (force = false, providedMarkdown?: string): void => {
+    const nextState = readMetadataState(providedMarkdown ?? editor.getMarkdown());
     if (!force && nextState.signature === metadataState.signature) return;
     metadataState = nextState;
     postToHost(createEnvelope('document.metadataChanged', null, {
@@ -195,16 +199,17 @@ export function installBridge(editor: {
 
   const recordDocumentChange = (): void => {
     revision += 1;
+    const markdown = editor.getMarkdown();
     postToHost(createEnvelope('document.indexInvalidated', null, {
       documentRevision: revision,
       facets: ['outline', 'links', 'images', 'diagnostics'],
     }));
     postToHost(createEnvelope('document.changed', null, { revision }));
     postToHost(createEnvelope('document.indexChanged', null, createDocumentIndex(
-      editor.getMarkdown(),
+      markdown,
       revision,
     ) as unknown as Record<string, unknown>));
-    postMetadataChangeIfNeeded();
+    postMetadataChangeIfNeeded(false, markdown);
   };
 
   window.markdownEditor = {
@@ -304,6 +309,14 @@ export function installBridge(editor: {
     },
     setPageNavigatorDemand(demand: PageNavigatorDemand): void {
       editor.setPageNavigatorDemand?.(demand);
+    },
+    insertAcademicBlock(commandId: string): void {
+      if (studioReadOnlyActive || !commandId) return;
+      editor.insertLmxCommand?.(commandId);
+    },
+    insertText(text: string): void {
+      if (studioReadOnlyActive || !text) return;
+      editor.insertTextAtSelection?.(text);
     },
     handleEnvelope(envelope: BridgeEnvelope): void {
       if (!isSupportedEnvelope(envelope)) return;
@@ -431,6 +444,20 @@ export function installBridge(editor: {
         case 'editor.deleteSelectedPage':
           window.markdownEditor?.deleteSelectedPage();
           break;
+        case 'editor.insertAcademicBlock': {
+          const commandId = envelope.payload.commandId;
+          if (typeof commandId === 'string') {
+            window.markdownEditor?.insertAcademicBlock(commandId);
+          }
+          break;
+        }
+        case 'editor.insertText': {
+          const text = envelope.payload.text;
+          if (typeof text === 'string') {
+            window.markdownEditor?.insertText(text);
+          }
+          break;
+        }
         case 'editor.applyThemeToComponent': {
           const componentSlot = envelope.payload.componentSlot;
           const themeAlias = envelope.payload.themeAlias;
@@ -591,6 +618,14 @@ export function installBridge(editor: {
     }));
     const layoutRevision = Number.parseInt(editor.visualContainer?.dataset.pageLayoutRevision ?? '0', 10);
     postToHost(createEnvelope('editor.pageInventoryChanged', null, { layoutRevision, pages: publicPages }));
+  });
+
+  editor.visualContainer?.addEventListener(VISUAL_PAGE_LAYOUT_COMMITTED, () => {
+    // Geometry/font/content reflows need not change the page inventory. Keep the
+    // host's raster guard current without resending every page or the document.
+    const layoutRevision = Number(editor.visualContainer?.dataset.pageLayoutRevision);
+    if (!Number.isSafeInteger(layoutRevision) || layoutRevision < 0) return;
+    postToHost(createEnvelope('editor.pageLayoutChanged', null, { layoutRevision }));
   });
 
   editor.onPageThumbnailChange?.((thumbnail) => {

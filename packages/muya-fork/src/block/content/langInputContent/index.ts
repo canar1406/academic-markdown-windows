@@ -36,16 +36,24 @@ class LangInputContent extends Content {
      * @param lang
      */
     updateLanguage(lang: string) {
-        const { start, end } = this.getCursor()!;
+        const cursor = this.getCursor();
         this.text = lang;
         this.parent!.lang = lang;
-        const startOffset = Math.min(lang.length, start.offset);
-        const endOffset = Math.min(lang.length, end.offset);
-        this.setCursor(startOffset, endOffset, true);
+        if (cursor) {
+            const startOffset = Math.min(lang.length, cursor.start.offset);
+            const endOffset = Math.min(lang.length, cursor.end.offset);
+            this.setCursor(startOffset, endOffset, true);
+        }
+        else {
+            this.update();
+        }
         this.muya.eventCenter.emit('content-change', { block: this });
     }
 
     override inputHandler() {
+        if (this.isComposed)
+            return;
+
         const textContent = this.domNode!.textContent ?? '';
         const lang = textContent.split(/\s+/)[0];
         this.updateLanguage(lang);

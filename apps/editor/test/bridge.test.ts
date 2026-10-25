@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { installBridge } from '../src/bridge';
+import { VISUAL_PAGE_LAYOUT_COMMITTED } from '../src/visual-page-flow';
 import {
   VISUAL_PAGE_ADD_REQUESTED,
   VISUAL_PAGE_DELETE_REQUESTED,
@@ -684,6 +685,32 @@ describe('editor bridge', () => {
     ]);
     expect(added).toEqual([]);
     expect(deleted).toEqual([]);
+  });
+
+  it('synchronizes layout-only commits without resending the inventory or Markdown', () => {
+    const messages: unknown[] = [];
+    const visualContainer = Object.assign(new EventTarget(), {
+      dataset: { pageLayoutRevision: '7' },
+    }) as unknown as HTMLElement;
+    Object.assign(globalThis, {
+      window: {
+        webkit: { messageHandlers: { bridge: { postMessage: (message: unknown) => messages.push(message) } } },
+      },
+    });
+    installBridge({
+      setContent(): void {},
+      getMarkdown(): string { return '# Private document'; },
+      on(): void {},
+      visualContainer,
+    });
+    messages.length = 0;
+    visualContainer.dispatchEvent(new Event(VISUAL_PAGE_LAYOUT_COMMITTED));
+    expect(messages).toEqual([{
+      protocolVersion: 1,
+      type: 'editor.pageLayoutChanged',
+      requestId: null,
+      payload: { layoutRevision: 7 },
+    }]);
   });
 
   it('forwards rendered A4 thumbnails without exposing editor internals', () => {

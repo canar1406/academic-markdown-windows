@@ -39,6 +39,7 @@ export class EditorSurface {
   private visualMotionTimer: number | null = null;
   private transactionPending = false;
   private transactionCommitCallback: (() => void) | null = null;
+  private transactionSafetyTimer: number | null = null;
   private readonly pendingHistoryActions: Array<'undo' | 'redo'> = [];
 
   constructor(
@@ -122,6 +123,10 @@ export class EditorSurface {
         this.pageInventoryListeners.forEach((listener) => listener(inventory));
       }
       if (!this.transactionPending) return;
+      if (this.transactionSafetyTimer !== null) {
+        window.clearTimeout(this.transactionSafetyTimer);
+        this.transactionSafetyTimer = null;
+      }
       const callback = this.transactionCommitCallback;
       this.transactionPending = false;
       this.transactionCommitCallback = null;
@@ -217,13 +222,33 @@ export class EditorSurface {
   }
 
   insertTextAtSelection(text: string): boolean {
-    if (this.mode !== 'visual' || text.length === 0) return false;
+    if (text.length === 0) return false;
+    if (this.mode === 'source') {
+      const { from, to } = this.source.getSelection();
+      return this.source.replaceRanges([{ from, to }], text);
+    }
     if (this.blankPageInput) return this.commitBlankPageInput(text);
     if (this.selectedPage?.kind === 'semantic'
       && !this.blocksForPage(this.selectedPage.pageIndex).some(block => this.editableContent(block))) {
       return false;
     }
-    this.visualContainer.focus();
+    const selection = window.getSelection();
+    const anchorInVisual = selection?.anchorNode
+      && this.visualContainer.contains(selection.anchorNode)
+      && !(selection.anchorNode instanceof Element
+        ? selection.anchorNode.closest('[contenteditable="false"]')
+        : selection.anchorNode.parentElement?.closest('[contenteditable="false"]'));
+    if (!anchorInVisual) {
+      const editableBlocks = this.topLevelBlocks().filter((block) => this.editableContent(block));
+      const lastEditable = editableBlocks.at(-1);
+      if (lastEditable) {
+        this.focusEditableBlock(lastEditable, false);
+      } else {
+        this.visualContainer.focus();
+      }
+    } else {
+      this.visualContainer.focus();
+    }
     return document.execCommand('insertText', false, text);
   }
 
@@ -467,13 +492,29 @@ export class EditorSurface {
   }
 
   private beginPageTransaction(onCommit: () => void): void {
+    if (this.transactionSafetyTimer !== null) {
+      window.clearTimeout(this.transactionSafetyTimer);
+    }
     this.transactionPending = true;
     this.transactionCommitCallback = onCommit;
     this.visualContainer.dataset.pageTransaction = 'pending';
     this.visualContainer.dispatchEvent(new Event(VISUAL_PAGE_TRANSACTION_START));
+    this.transactionSafetyTimer = window.setTimeout(() => {
+      this.transactionSafetyTimer = null;
+      if (!this.transactionPending) return;
+      const callback = this.transactionCommitCallback;
+      this.transactionPending = false;
+      this.transactionCommitCallback = null;
+      delete this.visualContainer.dataset.pageTransaction;
+      callback?.();
+    }, 220);
   }
 
   private cancelPageTransaction(): void {
+    if (this.transactionSafetyTimer !== null) {
+      window.clearTimeout(this.transactionSafetyTimer);
+      this.transactionSafetyTimer = null;
+    }
     this.transactionPending = false;
     this.transactionCommitCallback = null;
     delete this.visualContainer.dataset.pageTransaction;

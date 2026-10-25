@@ -348,4 +348,44 @@ lmx:
     expect(figurePreview.querySelectorAll('.hcmut-generated-row')).toHaveLength(2);
     expect(figurePreview.textContent).toContain('Hình thứ hai');
   });
+
+  it('preserves cover and toc preview DOM nodes when body paragraph edits do not change structure', () => {
+    let markdown = [
+      '---',
+      'cover:',
+      '  title: Báo cáo tốt nghiệp',
+      '---',
+      '# Chương 1',
+      '',
+      'Đoạn văn ban đầu.',
+    ].join('\n');
+    const editor = document.createElement('div');
+    const coverBlock = document.createElement('section');
+    coverBlock.dataset.lmxName = 'cover';
+    const coverPreview = document.createElement('div');
+    coverPreview.className = 'mu-lmx-structure-preview';
+    coverBlock.append(coverPreview);
+
+    const tocBlock = document.createElement('section');
+    tocBlock.dataset.lmxName = 'toc';
+    const tocPreview = document.createElement('div');
+    tocPreview.className = 'mu-lmx-structure-preview';
+    tocBlock.append(tocPreview);
+
+    editor.append(coverBlock, tocBlock);
+    const renderer = createHcmutStructurePreviewRenderer(() => markdown);
+    renderer({ name: 'cover', title: 'Trang bìa', container: coverPreview });
+    renderer({ name: 'toc', title: 'Mục lục', container: tocPreview });
+
+    const initialCoverChild = coverPreview.firstElementChild;
+    const initialTocRow = tocPreview.querySelector('.hcmut-generated-row');
+    expect(initialCoverChild).not.toBeNull();
+    expect(initialTocRow).not.toBeNull();
+
+    markdown += ' Gõ thêm nội dung trong đoạn văn.';
+    refreshHcmutStructurePreviews(editor, () => markdown);
+
+    expect(coverPreview.firstElementChild).toBe(initialCoverChild);
+    expect(tocPreview.querySelector('.hcmut-generated-row')).toBe(initialTocRow);
+  });
 });

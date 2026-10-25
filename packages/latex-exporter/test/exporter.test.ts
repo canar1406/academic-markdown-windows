@@ -1041,4 +1041,107 @@ lmx:
 
     expect(result.settings.headerLogoSizeMm).toBe(10);
   });
+
+  it('exports IEEE citations, cross-references, equations, definitions, proofs, algorithms, and bibliography', () => {
+    const source = [
+      '---',
+      'lmx:',
+      '  citationStyle: ieee',
+      '  references:',
+      '    - id: vaswani2017',
+      '      author: Vaswani, Ashish and Shazeer, Noam',
+      '      title: Attention Is All You Need',
+      '      venue: NeurIPS',
+      '      year: "2017"',
+      '      pages: "5998-6008"',
+      '    - id: knuth1997',
+      '      author: Donald E. Knuth',
+      '      title: The Art of Computer Programming',
+      '      venue: Addison-Wesley',
+      '      year: "1997"',
+      '---',
+      '',
+      'Theo nghiên cứu [@vaswani2017; @knuth1997], xem @fig-arch, @tbl-perf và @eq-loss.',
+      '',
+      ':::equation {#eq-loss}',
+      '$$',
+      '\\mathcal{L}(\\theta) = \\sum_{i=1}^n (y_i - \\hat{y}_i)^2',
+      '$$',
+      ':::',
+      '',
+      ':::definition {#def-metric title="Không gian Metric"}',
+      'Cho tập hợp $X$ khác rỗng.',
+      ':::',
+      '',
+      ':::proof {title="Chứng minh bổ đề"}',
+      'Ta có điều phải chứng minh.',
+      ':::',
+      '',
+      ':::remark {#rem-note title="Chú ý"}',
+      'Kết quả hội tụ nhanh.',
+      ':::',
+      '',
+      ':::algorithm {#alg-train caption="Thuật toán huấn luyện"}',
+      '1. Khởi tạo tham số',
+      ':::',
+      '',
+      ':::references',
+      ':::',
+      '',
+      ':::appendix {title="Phụ lục A: Dữ liệu thực nghiệm"}',
+      'Chi tiết bảng số liệu.',
+      ':::',
+      '',
+    ].join('\n');
+
+    const result = exportMarkdownToLatex(source, hcmutReportTheme);
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.latex).toContain('\\cite{vaswani2017,knuth1997}');
+    expect(result.latex).toContain('Hình~\\ref{fig-arch}');
+    expect(result.latex).toContain('Bảng~\\ref{tbl-perf}');
+    expect(result.latex).toContain('Phương trình~(\\ref{eq-loss})');
+    expect(result.latex).toContain('\\begin{equation}\n\\label{eq-loss}\n\\mathcal{L}(\\theta)');
+    expect(result.latex).toContain('\\textbf{Định nghĩa \\thehcmutdef (Không gian Metric).} \\label{def-metric}');
+    expect(result.latex).toContain('\\begin{proof}[Chứng minh bổ đề]');
+    expect(result.latex).toContain('\\textit{Nhận xét \\thehcmutrem (Chú ý).} \\label{rem-note}');
+    expect(result.latex).toContain('\\textbf{Thuật toán \\thehcmutalg: Thuật toán huấn luyện}');
+    expect(result.latex).toContain('\\begin{thebibliography}{9}');
+    expect(result.latex).toContain('\\bibitem{vaswani2017} A. Vaswani and N. Shazeer, ``Attention Is All You Need,\'\' \\emph{NeurIPS}, pp. 5998-6008, 2017.');
+    expect(result.latex).toContain('\\appendix\n\\section{Phụ lục A: Dữ liệu thực nghiệm}');
+  });
+
+  it('exports APA author-year inline citations and alphabetical hanging-indent bibliography', () => {
+    const source = [
+      '---',
+      'lmx:',
+      '  citationStyle: apa',
+      '  references:',
+      '    - id: zeta2022',
+      '      author: Zeta, Alice and Beta, Bob',
+      '      title: Modern Systems',
+      '      venue: IEEE Access',
+      '      year: "2022"',
+      '    - id: alpha2020',
+      '      author: Alpha, John and Gamma, Carol and Delta, Eve',
+      '      title: Foundations of Computing',
+      '      venue: ACM Surveys',
+      '      year: "2020"',
+      '---',
+      '',
+      'Kết quả trước đây [@zeta2022; @alpha2020].',
+      '',
+      ':::references',
+      ':::',
+      '',
+    ].join('\n');
+
+    const result = exportMarkdownToLatex(source, hcmutReportTheme);
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.latex).toContain('(\\hyperlink{cite.zeta2022}{Zeta \\& Beta, 2022}; \\hyperlink{cite.alpha2020}{Alpha et al., 2020})');
+    expect(result.latex.indexOf('\\hypertarget{cite.alpha2020}{}')).toBeLessThan(
+      result.latex.indexOf('\\hypertarget{cite.zeta2022}{}'),
+    );
+  });
 });

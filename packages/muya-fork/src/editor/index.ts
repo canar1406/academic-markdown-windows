@@ -51,12 +51,38 @@ export class Editor {
         const { activeContentBlock: oldActiveContentBlock } = this;
         if (block !== oldActiveContentBlock) {
             this._activeContentBlock = block;
-            if (oldActiveContentBlock)
+            if (oldActiveContentBlock) {
+                if (oldActiveContentBlock.isComposed) {
+                    oldActiveContentBlock.composeHandler(
+                        new CompositionEvent('compositionend'),
+                    );
+                }
                 oldActiveContentBlock.blurHandler();
+            }
 
             if (block)
                 block.focusHandler();
         }
+    }
+
+    private _resolveComposeBlock(
+        event: Event,
+        anchorBlock: Nullable<Content>,
+    ): Nullable<Content> {
+        const target = event.target;
+        const contentEl = target instanceof Element
+            ? target.closest('.mu-content')
+            : target instanceof Node
+                ? target.parentElement?.closest('.mu-content') ?? null
+                : null;
+        const targetBlock = contentEl
+            ? ((contentEl as Element)[BLOCK_DOM_PROPERTY] as Nullable<Content>)
+            : null;
+        if (targetBlock && targetBlock.isContent())
+            return targetBlock;
+        if (event.type === 'compositionend' && this._activeContentBlock?.isComposed)
+            return this._activeContentBlock;
+        return anchorBlock;
     }
 
     init() {
@@ -96,6 +122,31 @@ export class Editor {
                 return;
             }
 
+            if (event.type === 'compositionstart' || event.type === 'compositionend') {
+                const composeBlock = this._resolveComposeBlock(
+                    event,
+                    isSelectionInSameBlock ? anchorBlock ?? null : null,
+                );
+                if (event.type === 'compositionstart' && composeBlock) {
+                    this.activeContentBlock = composeBlock;
+                    composeBlock.composeHandler(event);
+                }
+                else if (event.type === 'compositionend') {
+                    if (composeBlock)
+                        composeBlock.composeHandler(event);
+                    if (
+                        this._activeContentBlock
+                        && this._activeContentBlock !== composeBlock
+                        && this._activeContentBlock.isComposed
+                    ) {
+                        this._activeContentBlock.composeHandler(event);
+                    }
+                    this.activeContentBlock
+                        = isSelectionInSameBlock && anchorBlock ? anchorBlock : null;
+                }
+                return;
+            }
+
             if (!isSelectionInSameBlock || !anchorBlock) {
                 this.activeContentBlock = null;
                 return;
@@ -106,11 +157,12 @@ export class Editor {
             switch (event.type) {
                 case 'click': {
                     anchorBlock.clickHandler(event);
-                    this._emitStandardBlockSelection(anchorBlock.outMostBlock);
+                    this._emitStandardBlockSelection(anchorBlock.outMostBlock, false);
                     break;
                 }
                 case 'input': {
                     anchorBlock.inputHandler(event);
+                    this._emitStandardBlockSelection(anchorBlock.outMostBlock, true);
                     break;
                 }
                 case 'keydown': {
@@ -119,11 +171,7 @@ export class Editor {
                 }
                 case 'keyup': {
                     anchorBlock.keyupHandler(event);
-                    break;
-                }
-                case 'compositionend':
-                case 'compositionstart': {
-                    anchorBlock.composeHandler(event);
+                    this._emitStandardBlockSelection(anchorBlock.outMostBlock, true);
                     break;
                 }
             }
@@ -139,10 +187,31 @@ export class Editor {
         ).subscribe(eventHandler);
     }
 
-    private _emitStandardBlockSelection(block: Nullable<Parent>) {
+    private _lastEmittedSelectionKey: string | null = null;
+
+    private _emitStandardBlockSelection(block: Nullable<Parent>, onlyIfPathChanged = false) {
         if (!block || block.parent !== this.scrollPage)
             return;
+        const path = block.getJsonPath();
+        if (path.length !== 1 || !Number.isInteger(path[0]))
+            return;
         const state = block.getState();
+        if (state.name === 'lmx-directive') {
+            if (block.domNode?.classList.contains('mu-lmx-structure'))
+                return;
+            const key = `${path[0]}:${state.meta.name}:${state.meta.identifier ?? ''}`;
+            const changed = this._lastEmittedSelectionKey !== key;
+            this._lastEmittedSelectionKey = key;
+            if (onlyIfPathChanged && changed) {
+                this.muya.eventCenter.emit('lmx-block-selected', {
+                    name: state.meta.name,
+                    identifier: state.meta.identifier ?? null,
+                    attributes: { ...state.meta.attributes },
+                    path,
+                });
+            }
+            return;
+        }
         let component: string | null = null;
         if (state.name === 'paragraph')
             component = 'paragraph';
@@ -150,9 +219,10 @@ export class Editor {
             component = `heading-${Math.min(Math.max(state.meta.level, 1), 4)}`;
         if (!component)
             return;
-        const path = block.getJsonPath();
-        if (path.length !== 1 || !Number.isInteger(path[0]))
+        const key = `${path[0]}:style:${component}`;
+        if (onlyIfPathChanged && this._lastEmittedSelectionKey === key)
             return;
+        this._lastEmittedSelectionKey = key;
         this.muya.eventCenter.emit('lmx-block-selected', {
             name: 'style',
             identifier: null,

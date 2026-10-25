@@ -30,6 +30,24 @@ export {
   type LmxDefinition,
   type LmxInsertCommand,
 } from './lmx-registry.js';
+export {
+  crossReferenceDisplayPrefix,
+  extractCitedKeysFromMarkdown,
+  formatAuthorInlineApa,
+  formatAuthorsForBibliography,
+  formatBibliographyItems,
+  formatInlineCitationGroup,
+  isCrossReferenceKey,
+  normalizeCitationStyle,
+  orderBibliographyEntries,
+  parseBibtexEntries,
+  parseReferencesBlockContent,
+  readDocumentCitationStyle,
+  readDocumentReferences,
+  type CitationReferenceEntry,
+  type CitationStyle,
+  type FormattedBibliographyItem,
+} from './citations.js';
 
 export interface DocumentDiagnostic {
   code: string;

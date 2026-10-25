@@ -34,35 +34,50 @@ const sourceModeButton = sourceButton;
 const diagnosticsPanel = diagnostics;
 
 let surface: EditorSurface;
-registerMarkTextPlugins({
-  insertCommand(commandId, triggerText, topLevelIndex): void {
-    const template = getLmxInsertCommand(commandId)?.template;
-    const localState = template
-      ? new MarkdownToState().generate(template).find((state) => state.name === 'lmx-directive')
-      : undefined;
-    const insertedLocally = topLevelIndex !== null
-      && localState !== undefined
-      && surface.replaceTopLevelBlock(topLevelIndex, localState);
-    if (!insertedLocally) {
-      surface.commitPendingChanges();
-      const updatedMarkdown = insertLmxTemplateAtTrigger(
-        surface.getMarkdown(),
-        commandId,
-        triggerText,
-      );
-      const updatedState = new MarkdownToState().generate(updatedMarkdown);
-      if (!surface.replaceAllTopLevelBlocks(updatedState)) {
-        surface.replaceContent(updatedMarkdown, { animate: true });
-      }
+const insertAcademicCommand = (
+  commandId: string,
+  triggerText = '',
+  topLevelIndex: number | null = null,
+): void => {
+  const template = getLmxInsertCommand(commandId)?.template;
+  if (!template) return;
+  if (surface.mode === 'source') {
+    surface.insertTextAtSelection(`\n${template}`);
+    return;
+  }
+  const localState = new MarkdownToState().generate(template).find((state) => state.name === 'lmx-directive');
+  const insertedLocally = topLevelIndex !== null
+    && localState !== undefined
+    && surface.replaceTopLevelBlock(topLevelIndex, localState);
+  if (!insertedLocally) {
+    surface.commitPendingChanges();
+    const updatedMarkdown = insertLmxTemplateAtTrigger(
+      surface.getMarkdown(),
+      commandId,
+      triggerText,
+    );
+    const updatedState = new MarkdownToState().generate(updatedMarkdown);
+    if (!surface.replaceAllTopLevelBlocks(updatedState)) {
+      surface.replaceContent(updatedMarkdown, { animate: true });
     }
-    setTimeout(() => {
-      if (insertedLocally && topLevelIndex !== null) surface.focusTopLevelBlock(topLevelIndex);
-      else surface.focusLastLmxBlock(commandId);
-    });
-  },
+  }
+  setTimeout(() => {
+    if (insertedLocally && topLevelIndex !== null) surface.focusTopLevelBlock(topLevelIndex);
+    else surface.focusLastLmxBlock(commandId);
+  });
+};
+registerMarkTextPlugins({
+  insertCommand: insertAcademicCommand,
 });
 
 let muya: Muya | undefined;
+let cachedVisualMarkdown = '# Báo cáo Markdown\n\nBắt đầu nhập nội dung của bạn ở đây.';
+const readCurrentVisualMarkdown = (): string => {
+  if (!cachedVisualMarkdown && muya) {
+    cachedVisualMarkdown = muya.getMarkdown();
+  }
+  return cachedVisualMarkdown;
+};
 muya = new Muya(container, {
   frontMatter: true,
   math: true,
@@ -71,17 +86,21 @@ muya = new Muya(container, {
   structurePreviewRenderer: createHcmutStructurePreviewRenderer(() => muya?.getMarkdown() ?? ''),
 });
 muya.init();
-muya.setContent('# Báo cáo Markdown\n\nBắt đầu nhập nội dung của bạn ở đây.', true);
+muya.setContent(cachedVisualMarkdown, true);
 let structureRefreshFrame: number | null = null;
 muya.on('content-change', () => {
+  cachedVisualMarkdown = '';
   if (structureRefreshFrame !== null) cancelAnimationFrame(structureRefreshFrame);
   structureRefreshFrame = requestAnimationFrame(() => {
     structureRefreshFrame = null;
-    refreshHcmutStructurePreviews(muya!.domNode, () => muya?.getMarkdown() ?? '');
+    refreshHcmutStructurePreviews(muya!.domNode, readCurrentVisualMarkdown);
   });
 });
+muya.domNode.addEventListener('editor-content-loaded', () => {
+  cachedVisualMarkdown = '';
+});
 installVisualPageFlow(muya.domNode, {
-  getPageDecorationSettings: () => readVisualPageDecorationSettings(muya?.getMarkdown() ?? ''),
+  getPageDecorationSettings: () => readVisualPageDecorationSettings(readCurrentVisualMarkdown()),
 });
 const sourceEditor = new CodeMirrorSourceEditor(sourceContainer);
 const editorSurface = new EditorSurface(muya, sourceEditor, muya.domNode, sourceContainer);
@@ -116,6 +135,7 @@ installBridge({
   onModeChange: editorSurface.onModeChange.bind(editorSurface),
   setMode: editorSurface.setMode.bind(editorSurface),
   insertTextAtSelection: editorSurface.insertTextAtSelection.bind(editorSurface),
+  insertLmxCommand: (commandId: string) => insertAcademicCommand(commandId, '', null),
   deleteSelectedPage: editorSurface.deleteSelectedPage.bind(editorSurface),
   selectPage: editorSurface.selectPage.bind(editorSurface),
   addPage: editorSurface.addPage.bind(editorSurface),

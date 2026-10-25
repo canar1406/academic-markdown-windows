@@ -26,6 +26,7 @@ export function insertLmxTemplateAtTrigger(
 ): string {
   const template = getLmxInsertCommand(commandId)?.template;
   if (!template) return source;
+  if (!triggerText.trim()) return insertLmxTemplate(source, commandId);
   const escapedTrigger = triggerText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const triggerLine = new RegExp(`(^|\\n)${escapedTrigger}(?=\\r?\\n|$)`);
   const match = triggerLine.exec(source);

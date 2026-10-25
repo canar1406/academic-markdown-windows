@@ -257,6 +257,25 @@ export function deriveVisualPageInventory(editor: HTMLElement): VisualPageInvent
     }
   }
 
+  const lastEntry = entries.at(-1);
+  const previousEntry = entries.length >= 2 ? entries.at(-2) : undefined;
+  if (
+    lastEntry
+    && previousEntry
+    && lastEntry.kind === 'blank'
+    && lastEntry.blockIndices.length === 0
+    && previousEntry.blockIndices.length >= 2
+  ) {
+    const candidateBreakIndex = previousEntry.blockIndices.at(-1)!;
+    if (blocks[candidateBreakIndex]?.dataset.lmxName === 'pagebreak') {
+      previousEntry.blockIndices.pop();
+      previousEntry.blockCount = Math.max(0, previousEntry.blockCount - 1);
+      lastEntry.blockIndices.push(candidateBreakIndex);
+      lastEntry.blockCount = 1;
+      lastEntry.deletable = true;
+    }
+  }
+
   const ownershipCount = new Map<number, number>();
   for (const entry of entries) {
     for (const blockIndex of entry.blockIndices) {
@@ -388,6 +407,8 @@ export function installVisualPageFlow(
   let composing = false;
   let disposed = false;
   let inventoryFingerprint = '';
+  let lastFlowSignature = '';
+  let lastTopLevelBlocks: HTMLElement[] = [];
   const scrollContainer = editor.closest<HTMLElement>('.editor-stage');
   let pendingScrollAnchor: ScrollAnchor | null = null;
 
@@ -396,7 +417,18 @@ export function installVisualPageFlow(
     const stageRect = scrollContainer.getBoundingClientRect();
     const candidates = [...directContentRoot(editor).children]
       .filter((element): element is HTMLElement => element instanceof HTMLElement && !element.hidden);
-    const anchor = candidates.find((element) => element.getBoundingClientRect().bottom > stageRect.top)
+    const selectionNode = window.getSelection()?.anchorNode ?? null;
+    const activeBlock = selectionNode
+      ? candidates.find((element) => element === selectionNode || element.contains(selectionNode))
+      : undefined;
+    const activeRect = activeBlock?.getBoundingClientRect();
+    const visibleActiveBlock = activeBlock && activeRect
+      && activeRect.bottom > stageRect.top
+      && activeRect.top < stageRect.bottom
+      ? activeBlock
+      : undefined;
+    const anchor = visibleActiveBlock
+      ?? candidates.find((element) => element.getBoundingClientRect().bottom > stageRect.top)
       ?? candidates.at(-1);
     pendingScrollAnchor = {
       element: anchor ?? null,
@@ -409,15 +441,49 @@ export function installVisualPageFlow(
     pendingScrollAnchor = null;
   };
 
-  const restoreScrollPosition = (): void => {
+  const restoreScrollPosition = (didReflow: boolean): void => {
     if (!pendingScrollAnchor || !scrollContainer) return;
     const anchor = pendingScrollAnchor;
     pendingScrollAnchor = null;
+    if (!didReflow) return;
     if (anchor.element?.isConnected) {
-      scrollContainer.scrollTop += anchor.element.getBoundingClientRect().top - anchor.viewportTop;
+      const delta = anchor.element.getBoundingClientRect().top - anchor.viewportTop;
+      if (Math.abs(delta) >= 0.5) {
+        scrollContainer.scrollTop += delta;
+      }
     } else {
       scrollContainer.scrollTop = anchor.scrollTop;
     }
+  };
+
+  const computeFlowSignature = (
+    blocks: HTMLElement[],
+    width: number,
+    pageHeight: number,
+    pageGap: number,
+    contentTop: number,
+    contentBottom: number,
+  ): string => {
+    const parts: Array<string | number> = [width, pageHeight, pageGap, contentTop, contentBottom, blocks.length];
+    for (const block of blocks) {
+      const lmxName = block.dataset.lmxName ?? '';
+      const structure = isStructureBlock(block);
+      const enabled = structure ? isEnabledStructureBlock(block) : true;
+      // For ordinary blocks and disabled structure blocks, height is independent
+      // of `--visual-block-spacer-before` (which only sets margin-top).
+      const intrinsicHeight = (!structure || !enabled) && !block.hidden
+        ? Math.round(measureLayoutHeight(editor, block) * 2)
+        : 0;
+      parts.push(
+        block.tagName,
+        block.hidden ? 1 : 0,
+        lmxName,
+        structure ? 1 : 0,
+        enabled ? 1 : 0,
+        intrinsicHeight,
+      );
+    }
+    return parts.join('|');
   };
 
   const update = (): void => {
@@ -434,11 +500,33 @@ export function installVisualPageFlow(
     const contentTop = cssPixelValue(style.getPropertyValue('--visual-page-content-top'), 88);
     const contentBottom = cssPixelValue(style.getPropertyValue('--visual-page-content-bottom'), 78);
     editor.style.setProperty('--visual-page-height', `${pageHeight}px`);
-    applyStructurePageFlow(editor, { pageHeight, pageGap, contentTop, contentBottom });
-    // A page-break spacer can change the position of every following block.
-    // Re-measure once before deriving page count and page chrome so WebKit
-    // cannot leave header/footer decorations on the preceding sheet.
-    applyStructurePageFlow(editor, { pageHeight, pageGap, contentTop, contentBottom });
+    const contentRoot = directContentRoot(editor);
+    const blocks = [...contentRoot.children].filter((element): element is HTMLElement => (
+      element instanceof HTMLElement
+    ));
+    const sameBlockIdentities = blocks.length === lastTopLevelBlocks.length
+      && blocks.every((block, idx) => block === lastTopLevelBlocks[idx]);
+    const nextFlowSignature = computeFlowSignature(
+      blocks,
+      width,
+      pageHeight,
+      pageGap,
+      contentTop,
+      contentBottom,
+    );
+    const needsStructureFlow = !sameBlockIdentities || nextFlowSignature !== lastFlowSignature;
+    if (needsStructureFlow) {
+      applyStructurePageFlow(editor, { pageHeight, pageGap, contentTop, contentBottom });
+      lastTopLevelBlocks = blocks;
+      lastFlowSignature = computeFlowSignature(
+        blocks,
+        width,
+        pageHeight,
+        pageGap,
+        contentTop,
+        contentBottom,
+      );
+    }
     const pageStack = calculatePageStackPlacement(
       measureRequiredPageExtent(editor, { pageHeight, pageGap }, contentTop),
       { pageHeight, pageGap },
@@ -463,7 +551,7 @@ export function installVisualPageFlow(
       options.onPageInventoryChange?.(inventory);
       editor.dispatchEvent(new CustomEvent('visual-page-inventory-changed', { detail: inventory }));
     }
-    restoreScrollPosition();
+    restoreScrollPosition(needsStructureFlow);
     editor.dispatchEvent(new CustomEvent(VISUAL_PAGE_LAYOUT_COMMITTED, { detail: inventory }));
   };
 
@@ -502,6 +590,7 @@ export function installVisualPageFlow(
   };
 
   const flush = (): void => {
+    composing = false;
     ++scheduleGeneration;
     if (animationFrame !== null) cancelAnimationFrame(animationFrame);
     animationFrame = null;
@@ -513,6 +602,7 @@ export function installVisualPageFlow(
   };
 
   const handlePageTransactionStart = (): void => {
+    composing = false;
     captureScrollPosition();
     // Structural DOM changes are synchronous, but Muya commits canonical JSON
     // on the next animation frame. Queue layout scheduling after the mutation
@@ -533,14 +623,25 @@ export function installVisualPageFlow(
   };
 
   const mutationObserver = new MutationObserver((records) => {
-    // Decoration nodes are rebuilt during every flow pass. Ignore those
-    // mutations so rebuilding page chrome cannot create an update loop.
+    // Decoration nodes, selection overlays, and page action strips do not
+    // alter content pagination. Ignore those mutations so they cannot trigger
+    // unnecessary layout passes or update loops.
     const contentChanged = records.some((record) => {
       const target = record.target instanceof Element
         ? record.target
         : record.target.parentElement;
-      return !target?.closest('.visual-page-decorations');
+      return !target?.closest(
+        '.visual-page-decorations, .visual-page-action-layer, .mu-selection, .mu-cursor, [data-blank-page-input]',
+      );
     });
+    if (composing && records.some((record) => (
+      record.type === 'childList'
+      && record.removedNodes.length > 0
+      && record.target instanceof Element
+      && record.target.classList.contains('mu-container')
+    ))) {
+      composing = false;
+    }
     if (contentChanged) schedule();
   });
   mutationObserver.observe(editor, {
@@ -619,7 +720,6 @@ function applyVisualPageDecorations(editor: HTMLElement, layout: VisualPageDecor
     decorations.className = 'visual-page-decorations';
     editor.append(decorations);
   }
-  decorations.replaceChildren();
 
   const slotHeight = layout.pageHeight + layout.pageGap;
   const pageCount = layout.pageCount;
@@ -660,6 +760,30 @@ function applyVisualPageDecorations(editor: HTMLElement, layout: VisualPageDecor
   synchronizeHeadingNumbers(editor);
   synchronizeTocPageNumbers(editor, slotHeight, bodyStartPage);
   synchronizeGeneratedListPageNumbers(editor, slotHeight, bodyStartPage);
+
+  const hasCustomRenderer = Boolean(
+    layout.settings.header.renderContent || layout.settings.footer.renderContent,
+  );
+  const decorationSignature = hasCustomRenderer
+    ? ''
+    : JSON.stringify({
+      pageHeight: layout.pageHeight,
+      pageGap: layout.pageGap,
+      contentTop: layout.contentTop,
+      contentBottom: layout.contentBottom,
+      contentLeft: layout.contentLeft,
+      contentRight: layout.contentRight,
+      decoratedPages,
+      bodyPageCount,
+      header: layout.settings.header,
+      footer: layout.settings.footer,
+    });
+  if (!hasCustomRenderer && decorations.dataset.decorationSignature === decorationSignature) {
+    return;
+  }
+  decorations.dataset.decorationSignature = decorationSignature;
+  decorations.querySelectorAll(':scope > .visual-page-header, :scope > .visual-page-footer')
+    .forEach((node) => node.remove());
 
   for (const [bodyPageOffset, pageIndex] of decoratedPages.entries()) {
     const pageTop = pageIndex * slotHeight;
@@ -731,7 +855,10 @@ function synchronizeHeadingNumbers(editor: HTMLElement): void {
     counters.fill(0, level);
     const parts = counters.slice(0, level).map(String);
     if (level === 4) parts[3] = alphabeticCounter(counters[3]);
-    heading.dataset.hcmutHeadingNumber = parts.join('.');
+    const nextNumber = parts.join('.');
+    if (heading.dataset.hcmutHeadingNumber !== nextNumber) {
+      heading.dataset.hcmutHeadingNumber = nextNumber;
+    }
   }
 }
 
