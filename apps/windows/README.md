@@ -66,3 +66,9 @@ Bạn có thể chạy bộ kiểm tra tính toàn vẹn của manifest và kị
 node --test scripts/test/windows-*.test.mjs
 node scripts/windows/resource-tools.mjs validate
 ```
+
+---
+
+## Bản quyền
+
+© 2026 **heavietnam**. Bảo lưu mọi quyền (*All rights reserved*).

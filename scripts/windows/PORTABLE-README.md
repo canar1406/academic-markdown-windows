@@ -28,7 +28,8 @@
 
 ---
 
-## Lưu ý về bản quyền & Phân phối
+## Bản quyền & Lưu ý phân phối
 
+- **Bản quyền phần mềm**: © 2026 **heavietnam**. Bảo lưu mọi quyền (*All rights reserved*).
 - Biểu trưng (logo) và tài nguyên mẫu báo cáo HCMUT đi kèm trong bản dựng nội bộ này chỉ dùng cho mục đích học tập, nghiên cứu và thử nghiệm kỹ thuật; không tự ý phát hành thương mại hoặc phân phối công khai khi chưa có sự chấp thuận bản quyền.
 - Hãy luôn sao lưu các tệp `.md` quan trọng trong quá trình sử dụng thử nghiệm.

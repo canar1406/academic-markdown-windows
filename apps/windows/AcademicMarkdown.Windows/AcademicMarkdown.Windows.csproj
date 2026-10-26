@@ -18,6 +18,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>12</LangVersion>
+    <Company>heavietnam</Company>
+    <Copyright>© 2026 heavietnam. All rights reserved.</Copyright>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260921001" />

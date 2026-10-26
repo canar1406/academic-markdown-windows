@@ -85,7 +85,8 @@ Chi tiết về cách đóng gói và vận hành bản Windows x64 được mô
 
 ---
 
-## Lưu ý bản quyền & Phân phối
+## Bản quyền & Lưu ý phân phối
 
+- **Bản quyền phần mềm**: © 2026 **heavietnam**. Bảo lưu mọi quyền (*All rights reserved*).
 - Biểu trưng (logo) và mẫu báo cáo HCMUT đi kèm chỉ phục vụ mục đích học tập, nghiên cứu và phát triển nội bộ; không tự ý phân phối công khai khi chưa được cấp phép.
 - Các thông báo bản quyền phần mềm bên thứ ba được lưu giữ đầy đủ tại [`THIRD_PARTY_NOTICES.md`](file:///Users/Heavietnam/Desktop/markdown-worktrees/zoom/THIRD_PARTY_NOTICES.md).

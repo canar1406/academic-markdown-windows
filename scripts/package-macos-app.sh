@@ -126,6 +126,7 @@ cat > "$app_bundle/Contents/Info.plist" <<PLIST
   <key>CFBundleVersion</key><string>1</string>
   <key>LSMinimumSystemVersion</key><string>15.0</string>
   <key>NSHighResolutionCapable</key><true/>
+  <key>NSHumanReadableCopyright</key><string>© 2026 heavietnam. All rights reserved.</string>
   <key>CFBundleDocumentTypes</key>
   <array>
     <dict>
